@@ -23,30 +23,57 @@ enum ThreadPurpose {
     REDUCER_THREAD,    
 };
 
-struct ThreadArgument {
+class ThreadArgument {
+ public:
     int thread_ID;
     ThreadPurpose threadPurpose;
     
     // Pointeri la variabile
-    pthread_mutex_t* mutexMapperFiles;
     pthread_mutex_t* mutexWordList;
     pthread_barrier_t* barrier;
 
+
+
+ public:
     // Default constructor
     ThreadArgument()
-        : thread_ID(-1), threadPurpose(MAPPER_THREAD), 
-          mutexMapperFiles(NULL), mutexWordList(NULL), 
-          barrier(NULL) 
+        : thread_ID(-1), threadPurpose(MAPPER_THREAD)
     {
     }
 
 
-
-    // Destructor
+    // Desctructor
     ~ThreadArgument()
     {
     }
+
 };
+
+
+class MapperThreadArgument : public ThreadArgument {
+ public:
+    int numFiles;
+    pthread_mutex_t* mutexFileList;
+    vector<bool>* isProcessedFile;
+    vector<string>* fileNames;
+
+ public:
+    // Default constructor
+    MapperThreadArgument():
+        ThreadArgument(),
+        mutexFileList(NULL),
+        isProcessedFile(NULL),
+        fileNames(NULL)
+    {
+    }
+
+    // Destructor
+    ~MapperThreadArgument()
+    {
+    }
+};
+
+
 
 int chars_to_int(char *str)
 {
@@ -128,15 +155,29 @@ void read_inptut_file(string inputFileName, vector<string> &mapperFileNames)
 }
 
 
-// Functia care se va executa in paralel
-void* thread_function(void *arg)
+// Functia de operatie Mapper care se va executa in paralel
+void* thread_mapper_function(void *arg)
 {
-    ThreadArgument* threadArgument = (ThreadArgument*) arg;
-    cout << threadArgument->thread_ID << " " << threadArgument->threadPurpose << "\n";
+    MapperThreadArgument* threadArgument = (MapperThreadArgument*) arg;
+
+    // int numMapperFiles = threadArgument->mapperFileNames->size();
+
 
     delete threadArgument;
     pthread_exit(NULL);
 }
+
+// Functia de operatie Reducer care se va executa in paralel
+void* thread_reducer_function(void *arg)
+{
+    ThreadArgument* threadArgument = (ThreadArgument*) arg;
+    cout << threadArgument->thread_ID << " " << threadArgument->threadPurpose << "\n";
+
+
+    delete threadArgument;
+    pthread_exit(NULL);
+}
+
 
 
 int main(int argc, char* argv[])
@@ -161,28 +202,42 @@ int main(int argc, char* argv[])
     
     int numThreads = numMappers + numReducers;
     int numMapperFiles = mapperFileNames.size();
+    
 
     threads = (pthread_t *) malloc(numThreads * sizeof(pthread_t));
     
-
 
     pthread_mutex_init(&mutexMapperFiles, NULL);
     pthread_mutex_init(&mutexWordList, NULL);
     // Avem mapperFileNames.size() = numMapperFiles de operatii Mapper
     pthread_barrier_init(&barrier, NULL, numMapperFiles);
 
+    vector<bool> isProcessedMapperFile;
+    for (int i = 0; i < numMappers; i++) {
+        isProcessedMapperFile.push_back(false);
+    }
+
+
+
     for (int i = 0; i < numThreads; i++) {
-        ThreadArgument* threadArgument = new ThreadArgument();
-        
-        // Initialize the argument manually if needed
-        threadArgument->thread_ID = i;
-        threadArgument->threadPurpose = (i < numMappers) ? MAPPER_THREAD : REDUCER_THREAD;
-        threadArgument->mutexMapperFiles = &mutexMapperFiles;
-        threadArgument->mutexWordList = &mutexWordList;
-        threadArgument->barrier = &barrier;
+        // Dowcasting is slow...I'm not using it
 
+        if (i < numMappers) {
+            MapperThreadArgument* threadArgument = new MapperThreadArgument();
+            threadArgument->thread_ID = i;
+            threadArgument->threadPurpose = MAPPER_THREAD;
+            threadArgument->mutexWordList = &mutexWordList;
+            threadArgument->barrier = &barrier;
+            threadArgument->numFiles = numMapperFiles; 
+            threadArgument->mutexFileList = &mutexMapperFiles;
+            threadArgument->isProcessedFile = &isProcessedMapperFile;
+            threadArgument->fileNames = &mapperFileNames;
 
-        pthread_create(&threads[i], NULL, thread_function, (void*) threadArgument);
+    
+            pthread_create(&threads[i], NULL, thread_mapper_function, (void*) threadArgument);
+        } else {
+           // pthread_create(&threads[i], NULL, thread_reducer_function, (void*) threadArgument);
+        }
     }
 
 
