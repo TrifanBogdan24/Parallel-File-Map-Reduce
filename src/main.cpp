@@ -18,11 +18,35 @@ using Mapper = map<string, int>;
 using Reducer = map<string, set<int>>;
 
 
-void thread_function(void *arg)
-{
-    pthread_exit(NULL);
-}
+enum ThreadPurpose {
+    MAPPER_THREAD,
+    REDUCER_THREAD,    
+};
 
+struct ThreadArgument {
+    int thread_ID;
+    ThreadPurpose threadPurpose;
+    
+    // Pointeri la variabile
+    pthread_mutex_t* mutexMapperFiles;
+    pthread_mutex_t* mutexWordList;
+    pthread_barrier_t* barrier;
+
+    // Default constructor
+    ThreadArgument()
+        : thread_ID(-1), threadPurpose(MAPPER_THREAD), 
+          mutexMapperFiles(NULL), mutexWordList(NULL), 
+          barrier(NULL) 
+    {
+    }
+
+
+
+    // Destructor
+    ~ThreadArgument()
+    {
+    }
+};
 
 int chars_to_int(char *str)
 {
@@ -104,41 +128,16 @@ void read_inptut_file(string inputFileName, vector<string> &mapperFileNames)
 }
 
 
-void initialize(int numThreads, int numMapperFiles,
-    pthread_t* &threads, vector<int> &thread_ID,
-    pthread_mutex_t &mutexWordList, pthread_mutex_t* &mutexMapperFiles, pthread_barrier_t barrier)
+// Functia care se va executa in paralel
+void* thread_function(void *arg)
 {
-    threads = (pthread_t *) malloc(numThreads * sizeof(pthread_t));
-    
-    vector<int> thread_id;
-    for (int i = 0; i < numThreads; i++) {
-        thread_ID.push_back(i);
-    }
+    ThreadArgument* threadArgument = (ThreadArgument*) arg;
+    cout << threadArgument->thread_ID << " " << threadArgument->threadPurpose << "\n";
 
-    mutexMapperFiles = (pthread_mutex_t *) malloc(numMapperFiles * sizeof(pthread_mutex_t));
-    for (int i = 0; i < numMapperFiles; i++) {
-        pthread_mutex_init(mutexMapperFiles, NULL);
-    }
-
-    pthread_mutex_init(&mutexWordList, NULL);
-
-    // Avem mapperFileNames.size() = numMapperFiles de operatii Mapper
-    pthread_barrier_init(&barrier, NULL, numMapperFiles);
+    delete threadArgument;
+    pthread_exit(NULL);
 }
 
-
-void dealocate(int numThreads, int numMapperFiles,
-    pthread_t* &threads, vector<int> &thread_ID,
-    pthread_mutex_t &mutexWordList, pthread_mutex_t* &mutexMapperFiles, pthread_barrier_t barrier)
-{
-    free(threads);
-
-    pthread_mutex_destroy(&mutexWordList);
-    for (int i = 0; i < numMapperFiles; i++) {
-        pthread_mutex_destroy(&mutexMapperFiles[i]);
-    }
-    free(mutexMapperFiles);
-}
 
 int main(int argc, char* argv[])
 {
@@ -153,19 +152,43 @@ int main(int argc, char* argv[])
     read_inptut_file(inputFileName, mapperFileNames);
 
     pthread_t *threads;
-    vector<int> thread_ID;
-    pthread_mutex_t *mutexMapperFiles;
+    pthread_mutex_t mutexMapperFiles;
     pthread_mutex_t mutexWordList;
     // Folosesc o bariera pentru a impune ca mai intai Maparile sa fie executate inaintea operatiilor Reduce
     // Avem mapperFileNames.size() mapari
     pthread_barrier_t barrier;
 
-    initialize(numMappers + numReducers, mapperFileNames.size(),
-        threads, thread_ID, mutexWordList, mutexMapperFiles, barrier);
+    
+    int numThreads = numMappers + numReducers;
+    int numMapperFiles = mapperFileNames.size();
 
-    dealocate(numMappers + numReducers, mapperFileNames.size(),
-        threads, thread_ID, mutexWordList, mutexMapperFiles, barrier);
+    threads = (pthread_t *) malloc(numThreads * sizeof(pthread_t));
+    
 
+
+    pthread_mutex_init(&mutexMapperFiles, NULL);
+    pthread_mutex_init(&mutexWordList, NULL);
+    // Avem mapperFileNames.size() = numMapperFiles de operatii Mapper
+    pthread_barrier_init(&barrier, NULL, numMapperFiles);
+
+    for (int i = 0; i < numThreads; i++) {
+        ThreadArgument* threadArgument = new ThreadArgument();
+        
+        // Initialize the argument manually if needed
+        threadArgument->thread_ID = i;
+        threadArgument->threadPurpose = (i < numMappers) ? MAPPER_THREAD : REDUCER_THREAD;
+        threadArgument->mutexMapperFiles = &mutexMapperFiles;
+        threadArgument->mutexWordList = &mutexWordList;
+        threadArgument->barrier = &barrier;
+
+
+        pthread_create(&threads[i], NULL, thread_function, (void*) threadArgument);
+    }
+
+
+    free(threads);
+    pthread_mutex_destroy(&mutexMapperFiles);
+    pthread_mutex_destroy(&mutexWordList);
 
     return 0;
 }
