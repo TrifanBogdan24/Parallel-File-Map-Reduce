@@ -10,12 +10,19 @@
 // C libraries
 #include <pthread.h>
 #include <stdlib.h>
+#include <cstring>
+#include <cctype>
 
 using namespace std;
 
 // aliases for data types
 using Mapper = map<string, int>;
 using Reducer = map<string, set<int>>;
+
+struct MapperElement {
+    string word;
+    int fileID;
+};
 
 
 enum ThreadPurpose {
@@ -155,12 +162,82 @@ void read_inptut_file(string inputFileName, vector<string> &mapperFileNames)
 }
 
 
+
+
+
+set<string> get_unique_words_in_file(string &inputFileName)
+{
+    ifstream fin(inputFileName);
+
+    cout << inputFileName << "\n";
+
+    if (!fin.is_open()) {
+        cerr << "[ERROR] Cannot open input file <" << inputFileName << ">\n";
+        // Return an empty set
+        return set<string>();
+    }
+
+    set<string> uniqueWords;
+
+
+    string line;
+
+    while (getline(fin, line)) {
+        for (char& chr : line) {
+            chr = isalpha(chr) ? tolower(chr) : ' ';
+        }
+
+        char* str = strtok(&line[0], " \t\n");
+
+        while (str != NULL) {
+            string word(str);
+
+            if (!word.empty()) {
+                uniqueWords.insert(word);
+            }
+
+            str = strtok(NULL, " \t\n");
+        }
+
+    }
+
+
+    fin.close();
+    return uniqueWords;
+}
+
+
+
 // Functia de operatie Mapper care se va executa in paralel
 void* thread_mapper_function(void *arg)
 {
     MapperThreadArgument* threadArgument = (MapperThreadArgument*) arg;
 
-    // int numMapperFiles = threadArgument->mapperFileNames->size();
+
+    for (int i = 0; i < threadArgument->numFiles; i++) {
+        // Thread-ul va lua un fisier care nu a fost citit deja, il marcheaza ca fiind procesat, si il citeste
+
+        pthread_mutex_lock(threadArgument->mutexFileList);
+        bool isFileToProcess = false;
+        if (threadArgument->isProcessedFile->at(i) == false) {
+            // Daca gasesc ca un fisier nu a fost procesat, il marchez si il citesc
+            isFileToProcess = true;
+            threadArgument->isProcessedFile->at(i) = true;
+        }
+        pthread_mutex_unlock(threadArgument->mutexFileList);
+
+        if (!isFileToProcess) {
+            continue;
+        }
+
+        // // Citeste continutul fisierului
+        string fileName = threadArgument->fileNames->at(i);
+        set<string> uniqueWords = get_unique_words_in_file(fileName);
+
+        // TODO: merge with mapper result
+    }
+
+
 
 
     delete threadArgument;
@@ -171,9 +248,6 @@ void* thread_mapper_function(void *arg)
 void* thread_reducer_function(void *arg)
 {
     ThreadArgument* threadArgument = (ThreadArgument*) arg;
-    cout << threadArgument->thread_ID << " " << threadArgument->threadPurpose << "\n";
-
-
     delete threadArgument;
     pthread_exit(NULL);
 }
@@ -193,11 +267,14 @@ int main(int argc, char* argv[])
     read_inptut_file(inputFileName, mapperFileNames);
 
     pthread_t *threads;
-    pthread_mutex_t mutexMapperFileList;
+    pthread_mutex_t mutexMapperFileNames;
     pthread_mutex_t mutexWordList;
     // Folosesc o bariera pentru a impune ca mai intai Maparile sa fie executate inaintea operatiilor Reduce
     // Avem mapperFileNames.size() mapari
     pthread_barrier_t barrier;
+
+    // cate un mutex pentru fiecare mapper
+    pthread_mutex_t* mutexMapper;
 
     
     int numThreads = numMappers + numReducers;
@@ -207,20 +284,28 @@ int main(int argc, char* argv[])
     threads = (pthread_t *) malloc(numThreads * sizeof(pthread_t));
     
 
-    pthread_mutex_init(&mutexMapperFileList, NULL);
+    pthread_mutex_init(&mutexMapperFileNames, NULL);
     pthread_mutex_init(&mutexWordList, NULL);
     // Avem mapperFileNames.size() = numMapperFiles de operatii Mapper
     pthread_barrier_init(&barrier, NULL, numMapperFiles);
 
     vector<bool> isProcessedMapperFile;
-    for (int i = 0; i < numMappers; i++) {
+    for (int i = 0; i < numMapperFiles; i++) {
         isProcessedMapperFile.push_back(false);
     }
 
+    vector<MapperElement> mappers;
+    for (int i = 0; i < numMappers; i++) {
+        pthread_mutex_init(&mutexMapper[i], NULL);
+    }
+
+
+    int ret_code = 0;
 
 
     for (int i = 0; i < numThreads; i++) {
         // Dowcasting is slow...I'm not using it
+        ret_code = 0;
 
         if (i < numMappers) {
             MapperThreadArgument* threadArgument = new MapperThreadArgument();
@@ -229,22 +314,43 @@ int main(int argc, char* argv[])
             threadArgument->mutexWordList = &mutexWordList;
             threadArgument->barrier = &barrier;
             threadArgument->numFiles = numMapperFiles; 
-            threadArgument->mutexFileList = &mutexMapperFileList;
+            threadArgument->mutexFileList = &mutexMapperFileNames;
             threadArgument->isProcessedFile = &isProcessedMapperFile;
             threadArgument->fileNames = &mapperFileNames;
 
     
-            pthread_create(&threads[i], NULL, thread_mapper_function, (void*) threadArgument);
+            ret_code = pthread_create(&threads[i], NULL, thread_mapper_function, (void*) threadArgument);
         } else {
-           // pthread_create(&threads[i], NULL, thread_reducer_function, (void*) threadArgument);
+            ThreadArgument* threadArgument = new ThreadArgument();
+            threadArgument->thread_ID = i;
+            threadArgument->threadPurpose = REDUCER_THREAD;
+            ret_code = pthread_create(&threads[i], NULL, thread_reducer_function, (void*) threadArgument);
+        }
+
+        if (ret_code) {
+            cerr << "[ERROR] Eroare la crearea thread-ului: " << i << "\n";
+        }
+    }
+
+    void *status;
+    for (int i = 0; i < numThreads; i++) {
+        pthread_join(threads[i], &status);
+        
+        if (ret_code) {
+            cerr << "[ERROR] Eroare la terminarea thread-ului: " << i << "\n";
         }
     }
 
 
-    free(threads);
-    pthread_mutex_destroy(&mutexMapperFileList);
-    pthread_mutex_destroy(&mutexWordList);
 
+
+
+    free(threads);
+    pthread_mutex_destroy(&mutexMapperFileNames);
+    pthread_mutex_destroy(&mutexWordList);
+    for (int i = 0; i < numMappers; i++) {
+        pthread_mutexattr_destroy(mutexMapper[i]);
+    }
     return 0;
 }
 
