@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     read_inptut_file(inputFileName, mapperFileNames);
 
     pthread_t *threads;
-    pthread_mutex_t mutexMapperFiles;
+    pthread_mutex_t mutexMapperFileList;
     pthread_mutex_t mutexWordList;
     // Folosesc o bariera pentru a impune ca mai intai Maparile sa fie executate inaintea operatiilor Reduce
     // Avem mapperFileNames.size() mapari
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
     threads = (pthread_t *) malloc(numThreads * sizeof(pthread_t));
     
 
-    pthread_mutex_init(&mutexMapperFiles, NULL);
+    pthread_mutex_init(&mutexMapperFileList, NULL);
     pthread_mutex_init(&mutexWordList, NULL);
     // Avem mapperFileNames.size() = numMapperFiles de operatii Mapper
     pthread_barrier_init(&barrier, NULL, numMapperFiles);
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
             threadArgument->mutexWordList = &mutexWordList;
             threadArgument->barrier = &barrier;
             threadArgument->numFiles = numMapperFiles; 
-            threadArgument->mutexFileList = &mutexMapperFiles;
+            threadArgument->mutexFileList = &mutexMapperFileList;
             threadArgument->isProcessedFile = &isProcessedMapperFile;
             threadArgument->fileNames = &mapperFileNames;
 
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 
 
     free(threads);
-    pthread_mutex_destroy(&mutexMapperFiles);
+    pthread_mutex_destroy(&mutexMapperFileList);
     pthread_mutex_destroy(&mutexWordList);
 
     return 0;
