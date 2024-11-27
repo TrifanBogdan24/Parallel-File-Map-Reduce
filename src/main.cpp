@@ -75,11 +75,11 @@ class ThreadArgument {
 class MapperThreadArgument : public ThreadArgument {
  public:
     int mapper_ID;
-    int numFiles;
-    pthread_mutex_t* mutexFileList;
+    int numInputFiles;
+    vector<pthread_mutex_t>* mutexesMapperInputFileNames;
     vector<bool>* isProcessedFile;
-    vector<string>* fileNames;
-    pthread_mutex_t** mutexMappers;
+    vector<string>* inputFileNames;
+    vector<pthread_mutex_t>* mutexesMapperResults;
     vector<Mapper>* mappers;
 
 
@@ -87,10 +87,9 @@ class MapperThreadArgument : public ThreadArgument {
     // Default constructor
     MapperThreadArgument():
         ThreadArgument(),
-        mutexFileList(NULL),
         isProcessedFile(NULL),
-        fileNames(NULL),
-        mutexMappers(NULL)
+        inputFileNames(NULL),
+        mutexesMapperResults(NULL)
     {
     }
 
@@ -155,10 +154,11 @@ void validate_input(int argc, char* argv[])
 }
 
 
-// functia citeste dintr-un fisier N nume de fisiere (pe care le returneaza in parametrul dat prin referinta)
-void read_inptut_file(string inputFileName, vector<string> &mapperFileNames)
+vector<string> read_inptut_file(string inputFileName)
 {
     ifstream fin(inputFileName);
+
+    vector<string> mapperInputFileNames;
 
     if (!fin.is_open()) {
         cerr << "[ERROR] Cannot open input file <" << inputFileName << ">\n";
@@ -175,10 +175,11 @@ void read_inptut_file(string inputFileName, vector<string> &mapperFileNames)
 
     for (int i = 0; i < numFileNames; i++) {
         getline(fin, fileName);
-        mapperFileNames.push_back(fileName);
+        mapperInputFileNames.push_back(fileName);
     }
 
     fin.close();
+    return mapperInputFileNames;
 }
 
 
@@ -235,41 +236,41 @@ void* thread_mapper_function(void *arg)
 
     int numMappers = threadArgument->numMappers;
     int mapper_ID = threadArgument->mapper_ID;
-    int numFiles = threadArgument->numFiles;
+    int numInputFiles = threadArgument->numInputFiles;
 
     // Pointeri la valori
     int *numCompletedMappers = threadArgument->numCompletedMappers;
     pthread_mutex_t* mutexNumCompletedMappers = threadArgument->mutexNumCompletedMappers;
-    pthread_mutex_t* mutexFileList = threadArgument->mutexFileList;
+    vector<pthread_mutex_t>* mutexesMapperInputFileNames = threadArgument->mutexesMapperInputFileNames;
     vector<bool>* isProcessedFile = threadArgument->isProcessedFile;
-    vector<string>* fileNames = threadArgument->fileNames;
-    pthread_mutex_t** mutexMappers = threadArgument->mutexMappers;
+    vector<string>* inputFileNames = threadArgument->inputFileNames;
+    vector<pthread_mutex_t>* mutexesMapperResults = threadArgument->mutexesMapperResults;
     vector<Mapper>* mappers = threadArgument->mappers;
 
     pthread_cond_t* condCompletedMappers = threadArgument->condCompletedMappers;
 
 
 
-    for (int i = 0; i < numFiles; i++) {
+    for (int i = 0; i < numInputFiles; i++) {
         // Thread-ul va lua un fisier care nu a fost citit deja, il marcheaza ca fiind procesat, si il citeste
 
-        pthread_mutex_lock(mutexFileList);
+
+        pthread_mutex_lock(&mutexesMapperInputFileNames->at(i));
         bool isFileToProcess = false;
         if (isProcessedFile->at(i) == false) {
             // Daca gasesc ca un fisier nu a fost procesat, il marchez si il citesc
             isFileToProcess = true;
             isProcessedFile->at(i) = true;
         }
-        pthread_mutex_unlock(mutexFileList);
+        pthread_mutex_unlock(&mutexesMapperInputFileNames->at(i));
 
         if (!isFileToProcess) {
             continue;
         }
 
         // // Citeste continutul fisierului
-        string fileName = fileNames->at(i);
-        set<string> uniqueWords = get_unique_words_in_file(fileName);
-
+        string inputFileName = inputFileNames->at(i);
+        set<string> uniqueWords = get_unique_words_in_file(inputFileName);
 
         
         for (set<string>::iterator itr = uniqueWords.begin(); itr != uniqueWords.end(); itr++) {
@@ -280,7 +281,6 @@ void* thread_mapper_function(void *arg)
         }
 
     }
-
 
 
 
@@ -330,11 +330,11 @@ void* thread_reducer_function(void *arg)
 
 
 
-void printMapResults(vector<Mapper> &mappers)
+void printMapResults(vector<Mapper> &mapperResults)
 {
-    for (int i = 0; i < mappers.size(); i++) {
+    for (int i = 0; i < mapperResults.size(); i++) {
         cout << "Mapper " << i << ":\n";
-        for (MapperElement &pair : mappers[i]) {
+        for (MapperElement &pair : mapperResults[i]) {
             cout << "{ " << pair.word << ", " << pair.fileID << " }\n";
         }
     }
@@ -351,38 +351,37 @@ int main(int argc, char* argv[])
     int numReducers = chars_to_int(argv[2]);
     string inputFileName = argv[3];
 
-    vector<string> mapperFileNames;
+    vector<string> mapperInputFileNames = read_inptut_file(inputFileName);
 
-    read_inptut_file(inputFileName, mapperFileNames);
-
-    pthread_t *threads;
-    pthread_mutex_t mutexMapperFileNames;
+    int numThreads = numMappers + numReducers;
+    int numMapperInputFiles = mapperInputFileNames.size();
+    
+    vector<pthread_t> threads;
+    vector<pthread_mutex_t> mutexesMapperInputFileNames;
     pthread_mutex_t mutexWordList;
-    // Folosesc o bariera pentru a impune ca mai intai Maparile sa fie executate inaintea operatiilor Reduce
-    // Avem mapperFileNames.size() mapari
     pthread_barrier_t barrier;
 
-    // cate un mutex pentru fiecare mapper
-    pthread_mutex_t* mutexMappers;
+    vector<pthread_mutex_t> mutexesMapperResults;
 
     pthread_cond_t condCompletedMappers;
     pthread_cond_init(&condCompletedMappers, NULL);
 
     
-    int numThreads = numMappers + numReducers;
-    int numMapperFiles = mapperFileNames.size();
-    
 
-    threads = (pthread_t *) malloc(numThreads * sizeof(pthread_t));
-    
 
-    pthread_mutex_init(&mutexMapperFileNames, NULL);
+    threads.resize(numThreads);
+
+    mutexesMapperInputFileNames.resize(numMapperInputFiles);
+
+    for (int i = 0; i < numMapperInputFiles; i++) {
+        pthread_mutex_init(&mutexesMapperInputFileNames[i], NULL);
+    }
     pthread_mutex_init(&mutexWordList, NULL);
-    // Avem mapperFileNames.size() = numMapperFiles de operatii Mapper
-    pthread_barrier_init(&barrier, NULL, numMapperFiles);
+    // Avem mapperInputFileNames.size() = numMapperFiles de operatii Mapper
+    pthread_barrier_init(&barrier, NULL, numMapperInputFiles);
 
     vector<bool> isProcessedMapperFile;
-    for (int i = 0; i < numMapperFiles; i++) {
+    for (int i = 0; i < numMapperInputFiles; i++) {
         isProcessedMapperFile.push_back(false);
     }
 
@@ -390,11 +389,10 @@ int main(int argc, char* argv[])
     vector<Mapper> mappers;
     mappers.resize(numMappers);
 
-    mutexMappers = (pthread_mutex_t *) malloc(numMappers * sizeof(pthread_mutex_t));
+    mutexesMapperResults.resize(numMappers);
     for (int i = 0; i < numMappers; i++) {
-        pthread_mutex_init(&mutexMappers[i], NULL);
+        pthread_mutex_init(&mutexesMapperResults[i], NULL);
     }
-
 
     int ret_code = 0;
 
@@ -415,15 +413,14 @@ int main(int argc, char* argv[])
             threadArgument->numCompletedMappers = &numCompletedMappers;
             threadArgument->threadPurpose = MAPPER_THREAD;
             threadArgument->barrier = &barrier;
-            threadArgument->numFiles = numMapperFiles; 
-            threadArgument->mutexFileList = &mutexMapperFileNames;
+            threadArgument->numInputFiles = numMapperInputFiles; 
+            threadArgument->mutexesMapperInputFileNames = &mutexesMapperInputFileNames;
             threadArgument->isProcessedFile = &isProcessedMapperFile;
-            threadArgument->fileNames = &mapperFileNames;
-            threadArgument->mutexMappers = &mutexMappers;
+            threadArgument->inputFileNames = &mapperInputFileNames;
+            threadArgument->mutexesMapperResults = &mutexesMapperResults;
             threadArgument->mappers = &mappers;
             threadArgument->condCompletedMappers = &condCompletedMappers;
             threadArgument->mutexNumCompletedMappers = &mutexNumCompletedMappers;
-
             ret_code = pthread_create(&threads[i], NULL, thread_mapper_function, (void*) threadArgument);
         } else {
             ThreadArgument* threadArgument = new ThreadArgument();
@@ -454,21 +451,22 @@ int main(int argc, char* argv[])
     }
 
 
-
-    printMapResults(mappers);
-
+    // for debugging: printMapResults(mappers);
 
 
-    free(threads);
+
+
     pthread_cond_destroy(&condCompletedMappers);
 
-    pthread_mutex_destroy(&mutexMapperFileNames);
+    for (int i = 0; i < numMapperInputFiles; i++) {
+        pthread_mutex_destroy(&mutexesMapperInputFileNames[i]);
+    }
+
     pthread_mutex_destroy(&mutexWordList);
     for (int i = 0; i < numMappers; i++) {
-        pthread_mutex_destroy(&mutexMappers[i]);
+        pthread_mutex_destroy(&mutexesMapperResults[i]);
     }
     pthread_mutex_destroy(&mutexNumCompletedMappers);
-    free(mutexMappers);
     return 0;
 }
 
