@@ -237,6 +237,7 @@ void insert_in_word_list(WordList* wordList, MapperElement &mapperElement)
         }
     }
 
+    wordList->insert(wordList->begin() + left, WordListElement(word, {fileID}));
 }
 
 

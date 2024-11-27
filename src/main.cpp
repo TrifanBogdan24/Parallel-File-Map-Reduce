@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include <cctype>
+#include <unistd.h>
 
 using namespace std;
 
@@ -96,6 +97,7 @@ class MapperThreadArgument : public ThreadArgument {
     vector<bool>* isProcessedFile;
     vector<string>* inputFileNames;
     vector<MapperResult>* mapperResults;
+    pthread_mutex_t* mutexMapperResults;
 
 
 
@@ -330,6 +332,7 @@ void insert_in_word_list(WordList* wordList, MapperElement &mapperElement)
         }
     }
 
+    wordList->insert(wordList->begin() + left, WordListElement(word, {fileID}));
 }
 
 
@@ -351,9 +354,11 @@ void* thread_mapper_function(void *arg)
     vector<bool>* isProcessedFile = threadArgument->isProcessedFile;
     vector<string>* inputFileNames = threadArgument->inputFileNames;
 
+    pthread_mutex_t* mutexMapperResults = threadArgument->mutexMapperResults;
     vector<MapperResult>* mapperResults = threadArgument->mapperResults;
 
     pthread_cond_t* condCompletedMappers = threadArgument->condCompletedMappers;
+
 
 
     for (int i = 0; i < numInputFiles; i++) {
@@ -367,6 +372,8 @@ void* thread_mapper_function(void *arg)
             isFileToProcess = true;
             isProcessedFile->at(i) = true;
         }
+
+
         pthread_mutex_unlock(&mutexesMapperInputFileNames->at(i));
 
         if (!isFileToProcess) {
@@ -382,8 +389,11 @@ void* thread_mapper_function(void *arg)
             string word = *itr;
             int file_ID = i;
             
+            pthread_mutex_lock(mutexMapperResults);
             mapperResults->at(mapper_ID).push_back(MapperElement(word, file_ID));
+            pthread_mutex_unlock(mutexMapperResults);
         }
+
 
     }
 
@@ -406,6 +416,7 @@ void* thread_mapper_function(void *arg)
 // Functia de operatie Reducer care se va executa in paralel
 void* thread_reducer_function(void *arg)
 {
+
     ReducerThreadArgument* threadArgument = (ReducerThreadArgument*) arg;
 
 
@@ -445,10 +456,10 @@ void* thread_reducer_function(void *arg)
             isMapperResultToProcess = true;
             isProcessedMapperResults->at(i) = true;
         }
-        pthread_mutex_unlock(&mutexesProcessedMapperResults->at(i));
         if (isMapperResultToProcess == false) {
             continue;
         }
+        pthread_mutex_unlock(&mutexesProcessedMapperResults->at(i));
 
 
 
@@ -457,6 +468,8 @@ void* thread_reducer_function(void *arg)
             insert_in_word_list(wordList, elem);
         }
         pthread_mutex_unlock(mutexWordList);
+
+
 
     }
 
@@ -544,7 +557,11 @@ int main(int argc, char* argv[])
     vector<pthread_mutex_t> mutexesMapperInputFileNames;
     pthread_barrier_t barrierComputeWordList;
 
+    pthread_mutex_t mutexMapperResults;
     vector<pthread_mutex_t> mutexesMapperResults;
+    pthread_mutex_init(&mutexMapperResults, NULL);
+
+
 
     pthread_cond_t condCompletedMappers;
     pthread_cond_init(&condCompletedMappers, NULL);
@@ -618,7 +635,8 @@ int main(int argc, char* argv[])
             threadArgument->condCompletedMappers = &condCompletedMappers;
             threadArgument->mutexNumCompletedMappers = &mutexNumCompletedMappers;
             threadArgument->mapperResults = &mapperResults;
-        
+            threadArgument->mutexMapperResults = &mutexMapperResults;
+
             ret_code = pthread_create(&threads[i], NULL, thread_mapper_function, (void*) threadArgument);
         } else {
             ReducerThreadArgument* threadArgument = new ReducerThreadArgument();
@@ -675,6 +693,8 @@ int main(int argc, char* argv[])
         pthread_mutex_destroy(&mutexesMapperResults[i]);
         pthread_mutex_destroy(&mutexesProcessedMapperResults[i]);
     }
+
+    pthread_mutex_destroy(&mutexMapperResults);
 
     pthread_mutex_destroy(&mutexWordList);
     pthread_mutex_destroy(&mutexNumCompletedMappers);
