@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <optional>
 
 // C libraries
 #include <pthread.h>
@@ -26,6 +27,8 @@ struct MapperElement {
 };
 
 using MapperResult = vector<MapperElement>;
+
+
 
 
 struct WordListElement {
@@ -49,6 +52,8 @@ struct WordListElement {
 };
 
 using WordList = vector<WordListElement>;
+
+
 
 
 enum ThreadPurpose {
@@ -132,6 +137,16 @@ class ReducerThreadArgument : public ThreadArgument {
     WordList* wordList;
 
     pthread_barrier_t* barrierComputeWordList;
+
+    // pthread_mutex_t* mutexIsSplitWordList;
+    // bool* isSplitWordList;
+
+    // vector<pthread_mutex_t>* mutexesIsSplitWordListForLetter;
+    // vector<bool>* isSplitWordListForLetter;
+
+    // vector<WordListChunck>* wordListChunks;
+    // vector<bool>* isPrintedWordListChunk;
+    // vector<pthread_mutex_t>* mutexesIsPrintedWordListChunk;
 
 
  public:
@@ -318,21 +333,122 @@ void insert_in_word_list(WordList* wordList, MapperElement &mapperElement)
     while (left <= right) {
         middle = left + (right - left) / 2;
 
-
-        if (wordList->at(middle).word == word) {
+        if (wordList->at(middle).word < word) {
+            left = middle + 1;
+        } else if (wordList->at(middle).word > word) {
+            right = middle - 1;
+        } else {
+            // then: wordList->at(middle).word == word
             // Updating word's set
             wordList->at(middle).fileIDs.insert(fileID);
             return;
         }
-
-        if (wordList->at(middle).word < word) {
-            left = middle + 1;
-        } else {
-            right = middle - 1;
-        }
     }
 
     wordList->insert(wordList->begin() + left, WordListElement(word, {fileID}));
+}
+
+struct WordListChunck {
+    char ch;
+    int firstIndex;
+    int lastIndex;
+
+    WordListChunck() {}
+
+    WordListChunck(char ch_value, int firstIndex_value, int lastIndex_value):
+        ch(ch_value), firstIndex(firstIndex_value), lastIndex(lastIndex_value)
+    {
+    }
+
+    ~WordListChunck() {}
+};
+
+optional<WordListChunck> find_character_chunk_in_word_list(WordList* wordList, char ch)
+{
+    int firstIndex = -1;
+    int lastIndex = -1;
+    int left = 0;
+    int right = 0;
+    int middle = 0;
+    
+
+    // Gasirea indexului primului cuvant care incepe cu caracterul "ch"
+    left = 0;
+    right = wordList->size() - 1;
+
+    while (left <= right) {
+        middle = left + (right - left) / 2;
+        
+        if (wordList->at(middle).word[0] < ch) {
+            left = middle + 1;
+        } else if (wordList->at(middle).word[0] > ch) {
+            right = middle + 1;
+        } else {
+            // then: wordList->at(middle).word[0] == ch)
+            firstIndex = middle;
+            right = middle -1;
+        }
+    }
+
+
+    if (firstIndex == -1) {
+        return nullopt;
+    }
+
+
+    // Gasirea indexului ultimului cuvant care incepe cu caracterul "ch"
+    left = 0;
+    right = wordList->size() - 1;
+
+    while (left <= right) {
+        middle = left + (right - left) / 2;
+
+        if (wordList->at(middle).word[0] < ch) {
+            left = middle + 1;
+        } else if (wordList->at(middle).word[0] > ch) {
+            right = middle - 1;
+        } else {
+            // then: wordList->at(middle).word[0] == ch
+            lastIndex = middle;
+            left = middle + 1;
+        }
+    }
+
+
+    if (lastIndex == -1) {
+        return nullopt;
+    }
+
+    return WordListChunck(ch, firstIndex, lastIndex);
+}
+
+
+void write_file_IDs(ofstream &fout, vector<int> &fileIDs)
+{
+
+    for (unsigned int i = 0; i < fileIDs.size(); i++) {
+        fout << fileIDs[i];
+        if (i != fileIDs.size() - 1) {
+            fout << " ";
+        }
+    }
+}
+
+void write_word_file_IDs(ofstream &fout, WordList &wordList, unsigned int &idx)
+{
+    fout << wordList[idx].word << ": [";
+    
+    vector<int> fileIDs(wordList[idx].fileIDs.begin(), wordList[idx].fileIDs.end());
+    sort(fileIDs.begin(), fileIDs.end());
+
+    write_file_IDs(fout, fileIDs);
+    fout << "]\n";
+}
+
+
+void write_word_list_chunk(WordList* wordList)
+{
+    // TODO: fol functiile de mai sus pt scriere
 }
 
 
@@ -408,7 +524,6 @@ void* thread_mapper_function(void *arg)
     pthread_mutex_unlock(mutexNumCompletedMappers);
 
 
-
     delete threadArgument;
     pthread_exit(NULL);
 }
@@ -436,7 +551,6 @@ void* thread_reducer_function(void *arg)
     WordList* wordList = threadArgument->wordList;
 
     pthread_barrier_t* barrierComputeWordList = threadArgument->barrierComputeWordList;
-
 
     pthread_mutex_lock(mutexNumCompletedMappers);
 
@@ -468,14 +582,15 @@ void* thread_reducer_function(void *arg)
             insert_in_word_list(wordList, elem);
         }
         pthread_mutex_unlock(mutexWordList);
-
-
-
     }
 
 
     pthread_barrier_wait(barrierComputeWordList);
 
+
+    // TODO: write wordList to output files
+
+    // Un singur thread face impartirea listei pentru fiecare litera din alfabet
 
 
     delete threadArgument;
@@ -483,29 +598,6 @@ void* thread_reducer_function(void *arg)
 }
 
 
-
-
-void write_file_IDs(ofstream &fout, vector<int> &fileIDs)
-{
-
-    for (unsigned int i = 0; i < fileIDs.size(); i++) {
-        fout << fileIDs[i];
-        if (i != fileIDs.size() - 1) {
-            fout << " ";
-        }
-    }
-}
-
-void write_word_file_IDs(ofstream &fout, WordList &wordList, unsigned int &idx)
-{
-    fout << wordList[idx].word << ": [";
-    
-    vector<int> fileIDs(wordList[idx].fileIDs.begin(), wordList[idx].fileIDs.end());
-    sort(fileIDs.begin(), fileIDs.end());
-
-    write_file_IDs(fout, fileIDs);
-    fout << "]\n";
-}
 
 
 void print_map_results(vector<MapperResult> &mapperResults)
