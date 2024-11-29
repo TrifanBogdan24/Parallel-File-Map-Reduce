@@ -15,9 +15,6 @@
 #include <cctype>
 #include <unistd.h>
 
-
-#include "CommandLineArgumentsParser.h"
-
 using namespace std;
 
 
@@ -166,6 +163,57 @@ class ReducerThreadArgument : public ThreadArgument {
 
 
 
+int chars_to_int(char *str)
+{
+    if (str == NULL) {
+        return -1;
+    }
+
+    int num = 0;
+
+    for (char *ptr = str; *ptr != '\0'; ptr++) {
+        if (*ptr < '0' || *ptr > '9') {
+            return 1;
+        }
+        num = num * 10 + (*ptr - '0');
+    }
+
+    return num;
+}
+
+void validate_input(int argc, char* argv[])
+{
+    if (argc != 4) {
+        cerr << "Invalid number of arguments!\n";
+        cerr << "The program expects exactly 3 arguments in the command line!\n";
+        cerr << "./exe <numar_mapperi> <numar_reduceri> <fisier_intrare>\n";
+        exit(EXIT_FAILURE);
+    }
+
+
+    bool isValidInput = true;
+
+    int numMappers = chars_to_int(argv[1]);
+    int numReducers = chars_to_int(argv[2]);
+
+
+    if (numMappers <= 0) {
+        cerr << "[ERROR] The frist argument in invalid!\n";
+        cerr << "The first argument (number of mapperResults) is expected to be a positive non-zero number.\n";
+        isValidInput = false;
+    }
+
+    if (numReducers <= 0) {
+        cerr << "[ERROR] The frist argument in invalid!\n";
+        cerr << "The first argument (number of mapperResults) is expected to be a positive non-zero number.\n";
+        isValidInput = false;
+    }
+
+
+    if (!isValidInput) {
+        exit(EXIT_FAILURE);
+    }
+}
 
 
 vector<string> read_inptut_file(string inputFileName)
@@ -589,13 +637,12 @@ void print_wordList(WordList &wordList)
 
 int main(int argc, char* argv[])
 {
-    CommandLineArgumentsParser cliArgsParser = CommandLineArgumentsParser(argc, argv);
+    validate_input(argc, argv);
+
     
-    int numMappers = cliArgsParser.getNumMappers();            // argv[1]
-    int numReducers = cliArgsParser.getNumReducers();          // argv[2]
-    string inputFileName = cliArgsParser.getInputFileName();   // argv[3]
-
-
+    int numMappers = chars_to_int(argv[1]);
+    int numReducers = chars_to_int(argv[2]);
+    string inputFileName = argv[3];
 
     vector<string> mapperInputFileNames = read_inptut_file(inputFileName);
 

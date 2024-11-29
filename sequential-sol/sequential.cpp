@@ -51,57 +51,7 @@ using WordList = vector<WordListElement>;
 
 
 
-int chars_to_int(char *str)
-{
-    if (str == NULL) {
-        return -1;
-    }
 
-    int num = 0;
-
-    for (char *ptr = str; *ptr != '\0'; ptr++) {
-        if (*ptr < '0' || *ptr > '9') {
-            return 1;
-        }
-        num = num * 10 + (*ptr - '0');
-    }
-
-    return num;
-}
-
-void validate_input(int argc, char* argv[])
-{
-    if (argc != 4) {
-        cerr << "Invalid number of arguments!\n";
-        cerr << "The program expects exactly 3 arguments in the command line!\n";
-        cerr << "./exe <numar_mapperi> <numar_reduceri> <fisier_intrare>\n";
-        exit(EXIT_FAILURE);
-    }
-
-
-    bool isValidInput = true;
-
-    int numMappers = chars_to_int(argv[1]);
-    int numReducers = chars_to_int(argv[2]);
-
-
-    if (numMappers <= 0) {
-        cerr << "[ERROR] The frist argument in invalid!\n";
-        cerr << "The first argument (number of mapperResults) is expected to be a positive non-zero number.\n";
-        isValidInput = false;
-    }
-
-    if (numReducers <= 0) {
-        cerr << "[ERROR] The frist argument in invalid!\n";
-        cerr << "The first argument (number of mapperResults) is expected to be a positive non-zero number.\n";
-        isValidInput = false;
-    }
-
-
-    if (!isValidInput) {
-        exit(EXIT_FAILURE);
-    }
-}
 
 
 vector<string> read_inptut_file(string inputFileName)
@@ -277,9 +227,11 @@ void print_wordList(WordList &wordList)
 
 void sequential_compute_mapper_results(vector<string> &inputFileNames,  vector<MapperResult> &mapperResults)
 {
-    mapperResults.resize(inputFileNames.size());
+    // Cate un Mapper pentru fiecare fisier
+    unsigned int numMappers = inputFileNames.size();
+    mapperResults.resize(numMappers);
 
-    for (unsigned int i = 0; i < inputFileNames.size(); i++) {
+    for (unsigned int i = 0; i < numMappers; i++) {
         string inputFileName = inputFileNames[i];
         set<string> uniqueWords = get_unique_words_in_file(inputFileName);
 
@@ -343,7 +295,7 @@ void sequential_write_reducer_results(WordList &wordList)
 
 int main(int argc, char* argv[])
 {
-    string inputFileName = argv[3];
+    string inputFileName = argv[1];
 
     vector<string> inputFileNames = read_inptut_file(inputFileName);
 
