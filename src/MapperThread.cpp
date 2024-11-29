@@ -44,7 +44,6 @@ void* MapperThread::routine(void *arg)
         pthread_mutex_unlock(&mapperThread->mutexesInputFiles->at(i));
 
 
-
         if (!isFileToProcess) {
             continue;
         }
@@ -53,8 +52,6 @@ void* MapperThread::routine(void *arg)
         string inputFileName = mapperThread->inputFileNames->at(i);
         set<string> uniqueWords = getUniqueWordsInFile(inputFileName);
 
-
-        
         for (set<string>::iterator itr = uniqueWords.begin(); itr != uniqueWords.end(); itr++) {
             string word = *itr;
             int file_ID = i;
@@ -78,8 +75,6 @@ void* MapperThread::routine(void *arg)
 
     pthread_exit(NULL);
 }
-
-
 
 
 

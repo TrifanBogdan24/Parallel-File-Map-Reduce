@@ -54,11 +54,11 @@ void* ReducerThread::routine(void *arg)
 
 
 
-        // pthread_mutex_lock(reducerThread->mutexWordList);
-        // for (MapperResultEntry &elem : reducerThread->mapperResults->at(i)) {
-        //     reducerThread->wordList->insertInWordList(elem);
-        // }
-        // pthread_mutex_unlock(reducerThread->mutexWordList);
+        pthread_mutex_lock(reducerThread->mutexWordList);
+        for (MapperResultEntry &elem :  reducerThread->mapperResults->at(i).mapperResultEntries) {
+            reducerThread->wordList->insertInWordList(elem);
+        }
+        pthread_mutex_unlock(reducerThread->mutexWordList);
     }
 
     pthread_barrier_wait(reducerThread->barrierComputeWordList);

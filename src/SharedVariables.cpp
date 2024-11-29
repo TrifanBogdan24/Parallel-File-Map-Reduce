@@ -25,9 +25,9 @@ using namespace std;
 
 
 
-SharedVariables::SharedVariables(const int value_numMapper, const int value_numReducers, const vector<string> &values_inputFileNames)
+SharedVariables::SharedVariables(const int value_numMappers, const int value_numReducers, const vector<string> &values_inputFileNames)
 {
-    this->numMappers = value_numMapper;
+    this->numMappers = value_numMappers;
     this->numReducers = value_numReducers;
     this->inputFileNames = values_inputFileNames;
 
@@ -93,7 +93,7 @@ MapperThread* SharedVariables::createMapperThread()
     MapperThread* mapperThread = new MapperThread();
     mapperThread->numMappers = this->numMappers;
     mapperThread->numReducers = this->numReducers;
-    mapperThread->numInputFiles = this->numInputFiles; 
+    mapperThread->numInputFiles = this->numInputFiles;
     mapperThread->numCompletedMappers = &this->numCompletedMappers;
     mapperThread->mutexesInputFiles = &this->mutexesInputFileNames;
     mapperThread->isProcessedInputFile = &this->isProcessedInputFile;

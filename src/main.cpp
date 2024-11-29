@@ -141,7 +141,6 @@ int main(int argc, char* argv[])
     SharedVariables sharedVariables = SharedVariables(numMappers, numReducers, mapperInputFileNames);
 
 
-
     int ret_code = 0;
 
     for (int i = 0; i < numThreads; i++) {
