@@ -26,18 +26,22 @@ using namespace std;
 // Functia de operatie Mapper care se va executa in paralel
 void* MapperThread::routine(void *arg)
 {
-    for (int i = 0; i < this->numInputFiles; i++) {
+    MapperThread* mapperThread = (MapperThread*) arg;
+
+
+    for (int i = 0; i < mapperThread->numInputFiles; i++) {
         // Thread-ul va lua un fisier care nu a fost citit deja, il marcheaza ca fiind procesat, si il citeste
 
 
         bool isFileToProcess = false;
-        pthread_mutex_lock(&this->mutexesInputFiles->at(i));
-        if (this->isProcessedInputFile->at(i) == false) {
+
+        pthread_mutex_lock(&mapperThread->mutexesInputFiles->at(i));
+        if (mapperThread->isProcessedInputFile->at(i) == false) {
             // Daca gasesc ca un fisier nu a fost procesat, il marchez si il citesc
             isFileToProcess = true;
-            this->isProcessedInputFile->at(i) = true;
+            mapperThread->isProcessedInputFile->at(i) = true;
         }
-        pthread_mutex_unlock(&this->mutexesInputFiles->at(i));
+        pthread_mutex_unlock(&mapperThread->mutexesInputFiles->at(i));
 
 
 
@@ -46,29 +50,30 @@ void* MapperThread::routine(void *arg)
         }
 
         // // Citeste continutul fisierului
-        string inputFileName = inputFileNames->at(i);
+        string inputFileName = mapperThread->inputFileNames->at(i);
         set<string> uniqueWords = getUniqueWordsInFile(inputFileName);
+
 
         
         for (set<string>::iterator itr = uniqueWords.begin(); itr != uniqueWords.end(); itr++) {
             string word = *itr;
             int file_ID = i;
             
-            mapperResults->at(mapper_ID).mapperResultEntries.push_back(MapperResultEntry(word, file_ID));
+            mapperThread
+                ->mapperResults->at(mapperThread->mapper_ID)
+                .mapperResultEntries.push_back(MapperResultEntry(word, file_ID));
         }
 
     }
 
+    pthread_mutex_lock(mapperThread->mutexNumCompletedMappers);
 
-
-    pthread_mutex_lock(mutexNumCompletedMappers);
-
-    (*numCompletedMappers) += 1;
-    if ((*numCompletedMappers) == numMappers) {
-        pthread_cond_broadcast(this->condCompletedMappers);
+    *(mapperThread->numCompletedMappers) += 1;
+    if (*(mapperThread->numCompletedMappers) == mapperThread->numMappers) {
+        pthread_cond_broadcast(mapperThread->condCompletedMappers);
     }
 
-    pthread_mutex_unlock(this->mutexNumCompletedMappers);
+    pthread_mutex_unlock(mapperThread->mutexNumCompletedMappers);
 
 
     pthread_exit(NULL);
@@ -106,9 +111,7 @@ set<string> MapperThread::getUniqueWordsInFile(string &inputFileName)
             string word(str);
 
             if (!word.empty()) {
-                cout << word << "->" << inputFileName << "\n";
                 uniqueWords.insert(word);
-
             }
 
             str = strtok(NULL, " \t\n");

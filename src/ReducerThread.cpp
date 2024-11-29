@@ -25,25 +25,28 @@ using namespace std;
 // Functia de operatie Reducer care se va executa in paralel
 void* ReducerThread::routine(void *arg)
 {
-    pthread_mutex_lock(mutexNumCompletedMappers);
+    ReducerThread* reducerThread = (ReducerThread*) arg;
 
-    while ((*numCompletedMappers) != numMappers) {
-        pthread_cond_wait(condCompletedMappers, mutexNumCompletedMappers);
+    pthread_mutex_lock(reducerThread->mutexNumCompletedMappers);
+
+    while (*(reducerThread->numCompletedMappers) != reducerThread->numMappers) {
+        pthread_cond_wait(reducerThread->condCompletedMappers, reducerThread->mutexNumCompletedMappers);
     }
 
-    pthread_mutex_unlock(mutexNumCompletedMappers);
+    pthread_mutex_unlock(reducerThread->mutexNumCompletedMappers);
 
 
     // De abia dupa ce thread-urile Mapper s-au terminat, Reducerii isi pot incepe munca
 
-    for (int i = 0; i < numMappers; i++) {
+    for (int i = 0; i < reducerThread->numMappers; i++) {
         bool isMapperResultToProcess = false;
-        pthread_mutex_lock(&mutexesProcessedMapperResults->at(i));
-        if (isProcessedMapperResults->at(i) == false) {
+        
+        pthread_mutex_lock(&reducerThread->mutexesProcessedMapperResults->at(i));
+        if (reducerThread->isProcessedMapperResults->at(i) == false) {
             isMapperResultToProcess = true;
-            isProcessedMapperResults->at(i) = true;
+            reducerThread->isProcessedMapperResults->at(i) = true;
         }
-        pthread_mutex_unlock(&mutexesProcessedMapperResults->at(i));
+        pthread_mutex_unlock(&reducerThread->mutexesProcessedMapperResults->at(i));
 
         if (isMapperResultToProcess == false) {
             continue;
@@ -51,14 +54,14 @@ void* ReducerThread::routine(void *arg)
 
 
 
-        // pthread_mutex_lock(mutexWordList);
-        // for (MapperResultEntry &elem : mapperResults->at(i)) {
-        //     wordList->insertInWordList(elem);
+        // pthread_mutex_lock(reducerThread->mutexWordList);
+        // for (MapperResultEntry &elem : reducerThread->mapperResults->at(i)) {
+        //     reducerThread->wordList->insertInWordList(elem);
         // }
-        // pthread_mutex_unlock(mutexWordList);
+        // pthread_mutex_unlock(reducerThread->mutexWordList);
     }
 
-    pthread_barrier_wait(barrierComputeWordList);
+    pthread_barrier_wait(reducerThread->barrierComputeWordList);
 
 
 

@@ -51,14 +51,10 @@ class MapperThread {
     ~MapperThread() {}
 
  public:
-    void* routine(void *arg);
+    static void* routine(void *arg);
  
  private:
-    set<string> getUniqueWordsInFile(string &inputFileName);
+    static set<string> getUniqueWordsInFile(string &inputFileName);
 
-   public:
-    static void* startRoutine(void* context) {
-        return static_cast<MapperThread*>(context)->routine(nullptr);
-    }
 
 };

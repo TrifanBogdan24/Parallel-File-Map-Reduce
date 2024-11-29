@@ -60,6 +60,6 @@ class SharedVariables {
     ~SharedVariables();
 
  public:
-    MapperThread createMapperThread();
-    ReducerThread createReducerThread();
+    MapperThread* createMapperThread();
+    ReducerThread* createReducerThread();
 };

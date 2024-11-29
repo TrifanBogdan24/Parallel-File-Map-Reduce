@@ -50,10 +50,6 @@ class ReducerThread {
     pthread_barrier_t* barrierComputeWordList;
 
  public:
-    void* routine(void *arg);
+    static void* routine(void *arg);
 
-  public:
-    static void* startRoutine(void* context) {
-        return static_cast<ReducerThread*>(context)->routine(nullptr);
-    }
 };

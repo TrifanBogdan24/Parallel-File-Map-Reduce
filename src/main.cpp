@@ -129,16 +129,17 @@ int main(int argc, char* argv[])
     int numMappers = cliArgsParser.getNumMappers();            // argv[1]
     int numReducers = cliArgsParser.getNumReducers();          // argv[2]
     string inputFileName = cliArgsParser.getInputFileName();   // argv[3]
-
+    
     vector<string> mapperInputFileNames = readInptutFile(inputFileName);
-
-    SharedVariables sharedVariables = SharedVariables(numMappers, numReducers, mapperInputFileNames);
 
     int numThreads = numMappers + numReducers;
     vector<pthread_t> threads;
     threads.resize(numThreads);
 
     WordList wordList = WordList();
+
+    SharedVariables sharedVariables = SharedVariables(numMappers, numReducers, mapperInputFileNames);
+
 
 
     int ret_code = 0;
@@ -148,11 +149,11 @@ int main(int argc, char* argv[])
         ret_code = 0;
 
         if (i < numMappers) {
-            MapperThread mapperThread = sharedVariables.createMapperThread();
-            ret_code = pthread_create(&threads[i], NULL, mapperThread.startRoutine, NULL);
+            MapperThread* mapperThread = sharedVariables.createMapperThread();
+            ret_code = pthread_create(&threads[i], NULL, MapperThread::routine, (void*) mapperThread);
         } else {
-            ReducerThread reducerThread = sharedVariables.createReducerThread();
-            ret_code = pthread_create(&threads[i], NULL, reducerThread.startRoutine, NULL);
+            ReducerThread* reducerThread = sharedVariables.createReducerThread();
+            ret_code = pthread_create(&threads[i], NULL, ReducerThread::routine, (void*) reducerThread);
         }
 
         if (ret_code) {
@@ -168,6 +169,8 @@ int main(int argc, char* argv[])
             cerr << "[ERROR] Eroare la terminarea thread-ului: " << i << "\n";
         }
     }
+
+    return 0;
 
     // for (int i = 0; i < numMappers; i++) {
     //     for (MapperElement &elem : mapperResults[i]) {

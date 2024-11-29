@@ -49,16 +49,17 @@ SharedVariables::SharedVariables(const int value_numMapper, const int value_numR
     }
 
 
+    mutexesMapperResults.resize(numMappers);
     mapperResults.resize(numMappers);
-    isProcessedMapperResults.resize(numMappers);
+
     mutexesProcessedMapperResults.resize(numMappers);
+    isProcessedMapperResults.resize(numMappers);
 
     for (int i = 0; i < numMappers; i++) {
         isProcessedMapperResults[i] = false;
         pthread_mutex_init(&mutexesMapperResults[i], NULL);
         pthread_mutex_init(&mutexesProcessedMapperResults[i], NULL);
     }
-
 
     pthread_mutex_init(&mutexWordList, NULL);
     pthread_mutex_init(&mutexNumCompletedMappers, NULL);
@@ -87,39 +88,39 @@ SharedVariables::~SharedVariables()
 }
 
 
-MapperThread SharedVariables::createMapperThread()
+MapperThread* SharedVariables::createMapperThread()
 {
-    MapperThread mapperThread = MapperThread();
-    mapperThread.numMappers = this->numMappers;
-    mapperThread.numReducers = this->numReducers;
-    mapperThread.numInputFiles = this->numInputFiles; 
-    mapperThread.numCompletedMappers = &this->numCompletedMappers;
-    mapperThread.mutexesInputFiles = &this->mutexesInputFileNames;
-    mapperThread.isProcessedInputFile = &this->isProcessedInputFile;
-    mapperThread.inputFileNames = &this->inputFileNames;
-    mapperThread.condCompletedMappers = &this->condCompletedMappers;
-    mapperThread.mutexNumCompletedMappers = &this->mutexNumCompletedMappers;
-    mapperThread.mapperResults = &this->mapperResults;
-    mapperThread.mutexMapperResults = &this->mutexMapperResults;
+    MapperThread* mapperThread = new MapperThread();
+    mapperThread->numMappers = this->numMappers;
+    mapperThread->numReducers = this->numReducers;
+    mapperThread->numInputFiles = this->numInputFiles; 
+    mapperThread->numCompletedMappers = &this->numCompletedMappers;
+    mapperThread->mutexesInputFiles = &this->mutexesInputFileNames;
+    mapperThread->isProcessedInputFile = &this->isProcessedInputFile;
+    mapperThread->inputFileNames = &this->inputFileNames;
+    mapperThread->condCompletedMappers = &this->condCompletedMappers;
+    mapperThread->mutexNumCompletedMappers = &this->mutexNumCompletedMappers;
+    mapperThread->mapperResults = &this->mapperResults;
+    mapperThread->mutexMapperResults = &this->mutexMapperResults;
 
     return mapperThread;
 }
 
-ReducerThread SharedVariables::createReducerThread()
+ReducerThread* SharedVariables::createReducerThread()
 {
-    ReducerThread reducerThread = ReducerThread();
-    reducerThread.numMappers = this->numMappers;
-    reducerThread.numReducers = this->numReducers;
-    reducerThread.numCompletedMappers = &this->numCompletedMappers;
-    reducerThread.mutexNumCompletedMappers = &this->mutexNumCompletedMappers;
-    reducerThread.condCompletedMappers = &this->condCompletedMappers;
-    reducerThread.mapperResults = &this->mapperResults;
-    reducerThread.mutexesMapperResults = &this->mutexesMapperResults;
-    reducerThread.wordList = &this->wordList;
-    reducerThread.mutexWordList = &this->mutexWordList;
-    reducerThread.isProcessedMapperResults = &this->isProcessedMapperResults;
-    reducerThread.mutexesProcessedMapperResults = &this->mutexesProcessedMapperResults;
-    reducerThread.barrierComputeWordList = &this->barrierComputeWordList;
+    ReducerThread* reducerThread = new ReducerThread();
+    reducerThread->numMappers = this->numMappers;
+    reducerThread->numReducers = this->numReducers;
+    reducerThread->numCompletedMappers = &this->numCompletedMappers;
+    reducerThread->mutexNumCompletedMappers = &this->mutexNumCompletedMappers;
+    reducerThread->condCompletedMappers = &this->condCompletedMappers;
+    reducerThread->mapperResults = &this->mapperResults;
+    reducerThread->mutexesMapperResults = &this->mutexesMapperResults;
+    reducerThread->wordList = &this->wordList;
+    reducerThread->mutexWordList = &this->mutexWordList;
+    reducerThread->isProcessedMapperResults = &this->isProcessedMapperResults;
+    reducerThread->mutexesProcessedMapperResults = &this->mutexesProcessedMapperResults;
+    reducerThread->barrierComputeWordList = &this->barrierComputeWordList;
 
     return reducerThread;
 }
