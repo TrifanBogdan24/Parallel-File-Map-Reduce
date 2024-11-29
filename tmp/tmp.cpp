@@ -15,6 +15,9 @@
 #include <cctype>
 #include <unistd.h>
 
+
+#include "CommandLineArgumentsParser.h"
+
 using namespace std;
 
 
@@ -781,25 +784,6 @@ int main(int argc, char* argv[])
     print_map_results(mapperResults);
     print_wordList(wordList);
 
-    pthread_cond_destroy(&condCompletedMappers);
-
-    for (int i = 0; i < numMapperInputFiles; i++) {
-        pthread_mutex_destroy(&mutexesMapperInputFileNames[i]);
-    }
-
-    for (int i = 0; i < numMappers; i++) {
-        pthread_mutex_destroy(&mutexesMapperResults[i]);
-        pthread_mutex_destroy(&mutexesProcessedMapperResults[i]);
-    }
-
-    pthread_mutex_destroy(&mutexMapperResults);
-
-    pthread_mutex_destroy(&mutexWordList);
-    pthread_mutex_destroy(&mutexNumCompletedMappers);
-
-    pthread_barrier_destroy(&barrierComputeWordList);
-    
-    pthread_mutex_destroy(&printmtx);
 
     return 0;
 }
