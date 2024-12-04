@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <optional>
 
 // C libraries
 #include <pthread.h>
@@ -71,7 +70,7 @@ class WordList {
  public:
     void insertInWordList(MapperResultEntry &mapperEntry);
  private:
-   optional<WordListChunck> findChunkOfCharacterInWordList(char letter);
+   WordListChunck findChunkOfCharacterInWordList(char letter);
    static bool compareEntries(const WordListEntry &entry1, const WordListEntry &entry2);
    void writeInputFileIDs(ostream &fout, set<int> &fileIDs);
    void writeWordListEntry(ostream &fout, WordListEntry &wordListEntry);

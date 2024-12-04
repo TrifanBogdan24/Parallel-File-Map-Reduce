@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <optional>
 
 // C libraries
 #include <pthread.h>
@@ -73,7 +72,7 @@ void WordList::insertInWordList(MapperResultEntry &mapperEntry)
 
 
 
-optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char letter)
+WordListChunck WordList::findChunkOfCharacterInWordList(char letter)
 {
     int firstIndex = -1;
     int lastIndex = -1;
@@ -96,9 +95,9 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char letter)
         }
     }
 
-    // Daca nu am gasit niciun cuvant cu litera cautata, iesim
+    // Daca nu am gasit niciun cuvant cu litera cautata, iesim din functie
     if (firstIndex == -1) {
-        return nullopt;
+        return WordListChunck(letter, -1, -1);
     }
 
     // Gasirea indexului ultimului cuvant care incepe cu caracterul "letter"
@@ -168,23 +167,26 @@ void WordList::writeLetterChunck(char letter)
     }
 
 
-    optional<WordListChunck> wordListChunck = findChunkOfCharacterInWordList(letter);
+    WordListChunck wordListChunck = findChunkOfCharacterInWordList(letter);
+    int firstIndex = wordListChunck.firstIndex;
+    int lastIndex = wordListChunck.lastIndex;
+
+    if (firstIndex < 0 || lastIndex < 0) {
+        fout.close();
+        return;
+    }
 
 
-    if (wordListChunck) {
-        int firstIndex = wordListChunck->firstIndex;
-        int lastIndex = wordListChunck->lastIndex;
-        vector<WordListEntry> selectedEntries(
-            this->wordListEntries.begin() + firstIndex,
-            this->wordListEntries.begin() + lastIndex
-        );
+    vector<WordListEntry> selectedEntries(
+        this->wordListEntries.begin() + firstIndex,
+        this->wordListEntries.begin() + lastIndex
+    );
 
-        sort(selectedEntries.begin(), selectedEntries.end(), compareEntries);
+    sort(selectedEntries.begin(), selectedEntries.end(), compareEntries);
 
 
-        for (WordListEntry &entry : selectedEntries) {
-            writeWordListEntry(fout, entry);
-        }
+    for (WordListEntry &entry : selectedEntries) {
+        writeWordListEntry(fout, entry);
     }
 
     fout.close();
