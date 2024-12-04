@@ -128,7 +128,7 @@
 ../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_26_cleaned.txt
 ../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_27_cleaned.txt
 ../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_28_cleaned.txt
-test_in/crime_and_punishment/Crime_and_Punishment_Chapter_29_cleaned.txt
+../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_29_cleaned.txt
 ../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_30_cleaned.txt
 ../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_31_cleaned.txt
 ../checker/test_in/crime_and_punishment/Crime_and_Punishment_Chapter_32_cleaned.txt
@@ -167,7 +167,7 @@ test_in/crime_and_punishment/Crime_and_Punishment_Chapter_29_cleaned.txt
 ../checker/test_in/oliver_twist/Oliver_Twist_Chapter_26_cleaned.txt
 ../checker/test_in/oliver_twist/Oliver_Twist_Chapter_27_cleaned.txt
 ../checker/test_in/oliver_twist/Oliver_Twist_Chapter_28_cleaned.txt
-test_in/oliver_twist/Oliver_Twist_Chapter_29_cleaned.txt
+../checker/test_in/oliver_twist/Oliver_Twist_Chapter_29_cleaned.txt
 ../checker/test_in/oliver_twist/Oliver_Twist_Chapter_30_cleaned.txt
 ../checker/test_in/oliver_twist/Oliver_Twist_Chapter_31_cleaned.txt
 ../checker/test_in/oliver_twist/Oliver_Twist_Chapter_32_cleaned.txt
