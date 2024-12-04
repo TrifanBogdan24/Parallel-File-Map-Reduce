@@ -138,9 +138,9 @@ cd ../checker
 count=0
 
 # se ruleaza implementarea paralela pe 2 si 4 thread-uri
-for M in 1 2 4
+for M in 4 3 2 1
 do
-    for R in 1 2 4
+    for R in 4 3 2 1
     do
         echo "Se ruleaza varianta cu M=$M si R=$R..."
 
