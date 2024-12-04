@@ -72,13 +72,14 @@ class WordList {
     void insertInWordList(MapperResultEntry &mapperEntry);
  private:
    optional<WordListChunck> findChunkOfCharacterInWordList(char letter);
-   void writeInputFileIDs(ofstream &fout, set<int> &fileIDs);
-   void writeWordListEntry(ofstream &fout, int &idx);
+   static bool compareEntries(const WordListEntry &entry1, const WordListEntry &entry2);
+   void writeInputFileIDs(ostream &fout, set<int> &fileIDs);
+   void writeWordListEntry(ostream &fout, WordListEntry &wordListEntry);
  public:
    void writeLetterChunck(char letter);
 
  public:
+   void writeWordList();  // to word-list.txt
    void printWordList();
-
 
 };

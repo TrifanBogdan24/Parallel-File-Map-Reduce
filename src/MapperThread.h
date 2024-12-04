@@ -52,10 +52,10 @@ class MapperThread {
     ~MapperThread() {}
 
  public:
-    static void* routine(void *arg);
+   static void* routine(void *arg);
  
  private:
-    static set<string> getUniqueWordsInFile(string &inputFileName);
+   set<string> getUniqueWordsInFile(string &inputFileName);
 
 
 };

@@ -1,0 +1,4 @@
+3
+../checker/test_in_small/file1.txt
+../checker/test_in_small/file2.txt
+../checker/test_in_small/file3.txt

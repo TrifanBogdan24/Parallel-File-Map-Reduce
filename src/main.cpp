@@ -11,6 +11,9 @@
 // C libraries
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <cstring>
 #include <cctype>
 #include <unistd.h>
@@ -37,7 +40,6 @@ vector<string> readInptutFile(string &inputFileName)
     vector<string> mapperInputFileNames;
 
     if (!fin.is_open()) {
-        cerr << "[ERROR] Cannot open input file <" << inputFileName << ">\n";
         exit(EXIT_FAILURE);
     }
 
@@ -113,9 +115,10 @@ int main(int argc, char* argv[])
 
     // // for debugging: sharedVariables.printMapResults();
     // // for deubgging:  sharedVariables.printWordList();
-    sharedVariables.printMapResults();
-    cout << "\n\n\n";
-    sharedVariables.printWordList();
+    // sharedVariables.printMapResults();
+    // cout << "\n\n\n";
+    // sharedVariables.printWordList();
+    sharedVariables.writeWordList();
 
     return 0;
 }

@@ -7,6 +7,8 @@
 #include <vector>
 #include <algorithm>
 #include <optional>
+#include <sstream>
+
 
 // C libraries
 #include <pthread.h>
@@ -18,6 +20,7 @@
 #include "Boolean.h"
 #include "MapperThread.h"
 #include "MapperResult.h"
+
 
 
 
@@ -54,12 +57,12 @@ void* MapperThread::routine(void *arg)
 
         // Citeste continutul fisierului
         string inputFileName = mapperThread->inputFileNames->at(i);
-        set<string> uniqueWords = getUniqueWordsInFile(inputFileName);
+        set<string> uniqueWords = mapperThread->getUniqueWordsInFile(inputFileName);
 
 
         for (set<string>::iterator itr = uniqueWords.begin(); itr != uniqueWords.end(); itr++) {
             string word = *itr;
-            int file_ID = i;
+            int file_ID = i + 1;
             
             mapperThread
                 ->mapperResults[mapperThread->mapper_ID]
@@ -87,39 +90,32 @@ set<string> MapperThread::getUniqueWordsInFile(string &inputFileName)
 {
     ifstream fin(inputFileName);
 
-
     if (!fin.is_open()) {
-        cerr << "[ERROR] Cannot open input file <" << inputFileName << ">\n";
-        // Return an empty set
         return set<string>();
     }
 
     set<string> uniqueWords;
-
-
     string line;
 
     while (getline(fin, line)) {
         for (char& chr : line) {
-            chr = isalpha(chr) ? tolower(chr) : ' ';
+            if (!isalpha(chr)) {
+                chr = ' ';
+            } else {
+                chr = tolower(chr);
+            }
         }
 
-        char* str = strtok(&line[0], " \t\n");
-
-        while (str != NULL) {
-            string word(str);
-
+        stringstream ss(line);
+        string word;
+        
+        while (ss >> word) {
             if (!word.empty()) {
                 uniqueWords.insert(word);
             }
-
-            str = strtok(NULL, " \t\n");
         }
-
     }
-
 
     fin.close();
     return uniqueWords;
 }
-

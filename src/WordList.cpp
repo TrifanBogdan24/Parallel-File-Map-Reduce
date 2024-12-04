@@ -77,15 +77,11 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char letter)
 {
     int firstIndex = -1;
     int lastIndex = -1;
-    int left = 0;
-    int right = 0;
-    int middle = 0;
-    
+    int left, right, middle;
 
     // Gasirea indexului primului cuvant care incepe cu caracterul "letter"
     left = 0;
     right = this->wordListEntries.size() - 1;
-
     while (left <= right) {
         middle = left + (right - left) / 2;
         
@@ -94,41 +90,31 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char letter)
         } else if (this->wordListEntries[middle].word[0] > letter) {
             right = middle - 1;
         } else {
-            // then: this->wordListEntries[middle].word[0] == letter)
+            // this->wordListEntries[middle].word[0] == letter
             firstIndex = middle;
             right = middle - 1;
         }
-
     }
 
-
+    // Daca nu am gasit niciun cuvant cu litera cautata, iesim
     if (firstIndex == -1) {
         return nullopt;
     }
 
-
     // Gasirea indexului ultimului cuvant care incepe cu caracterul "letter"
-    left = 0;
+    left = firstIndex;
     right = this->wordListEntries.size() - 1;
-
     while (left <= right) {
         middle = left + (right - left) / 2;
 
-        if (wordListEntries[middle].word[0] < letter) {
+        if (this->wordListEntries[middle].word[0] < letter) {
             left = middle + 1;
-        } else if (wordListEntries[middle].word[0] > letter) {
+        } else if (this->wordListEntries[middle].word[0] > letter) {
             right = middle - 1;
         } else {
-            // then: wordListEntries[middle].word[0] == letter
             lastIndex = middle;
             left = middle + 1;
         }
-
-    }
-
-
-    if (lastIndex == -1) {
-        return nullopt;
     }
 
     return WordListChunck(letter, firstIndex, lastIndex);
@@ -137,7 +123,7 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char letter)
 
 
 
-void WordList::writeInputFileIDs(ofstream &fout, set<int> &fileIDs)
+void WordList::writeInputFileIDs(ostream &fout, set<int> &fileIDs)
 {
 
     set<int>::iterator iter = fileIDs.begin(); 
@@ -154,32 +140,50 @@ void WordList::writeInputFileIDs(ofstream &fout, set<int> &fileIDs)
 }
 
 
-void WordList::writeWordListEntry(ofstream &fout, int &idx)
+void WordList::writeWordListEntry(ostream &fout, WordListEntry &wordListEntry)
 {
-    WordListEntry &wordListEntry = this->wordListEntries[idx];
-
-    fout << wordListEntry.word << ": [";
+    fout << wordListEntry.word << ":[";
     writeInputFileIDs(fout, wordListEntry.fileIDs);
     fout << "]\n";
 }
 
 
+bool WordList::compareEntries(const WordListEntry &entry1, const WordListEntry &entry2)
+{
+    if (entry1.fileIDs.size() != entry2.fileIDs.size()) {
+        return entry1.fileIDs.size() > entry2.fileIDs.size();
+    }
+    return entry1.word < entry2.word;
+}
+
 void WordList::writeLetterChunck(char letter)
 {
     string outputFileName = string(1, letter) + ".txt";
+
+
     ofstream fout(outputFileName);
 
     if (!fout.is_open()) {
-        cerr << "[ERROR] Cannot open input file <" << outputFileName << ">\n";
         return;
     }
 
 
     optional<WordListChunck> wordListChunck = findChunkOfCharacterInWordList(letter);
 
+
     if (wordListChunck) {
-        for (int i = wordListChunck->firstIndex; i <= wordListChunck->lastIndex; i++) {
-            writeWordListEntry(fout, i);
+        int firstIndex = wordListChunck->firstIndex;
+        int lastIndex = wordListChunck->lastIndex;
+        vector<WordListEntry> selectedEntries(
+            this->wordListEntries.begin() + firstIndex,
+            this->wordListEntries.begin() + lastIndex
+        );
+
+        sort(selectedEntries.begin(), selectedEntries.end(), compareEntries);
+
+
+        for (WordListEntry &entry : selectedEntries) {
+            writeWordListEntry(fout, entry);
         }
     }
 
@@ -192,18 +196,26 @@ void WordList::printWordList()
 {
     cout << "Word List:\n";
 
-
-    for (WordListEntry &elem : this->wordListEntries) {
-        cout << elem.word << "-> ";
-        for (int fileID : elem.fileIDs) {
-            cout << fileID << ", ";
-        }
+    for (WordListEntry &entry : this->wordListEntries) {
+        writeWordListEntry(cout, entry);
         cout << "\n";
     }
-    cout << "\n";
 }
 
 
+
+void WordList::writeWordList()
+{
+    ofstream fout("word-list.txt");
+    fout << "Word List:\n";
+
+    for (WordListEntry &entry : this->wordListEntries) {
+        writeWordListEntry(fout, entry);
+        cout << "\n";
+    }
+
+    fout.close();
+}
 
 
 

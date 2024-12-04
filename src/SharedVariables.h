@@ -28,7 +28,6 @@ using namespace std;
 #define NUM_ALPHABET_LETTERS (int) 26
 
 class SharedVariables {
-
  private:
    int numMappers;
    int numReducers;
@@ -70,6 +69,7 @@ class SharedVariables {
 
 
  public:
+  void writeWordList();
   void printMapResults();
   void printWordList();
  

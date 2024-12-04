@@ -195,3 +195,10 @@ void SharedVariables::printWordList()
 {
     this->wordList.printWordList();
 }
+
+
+void SharedVariables::writeWordList()
+{
+    this->wordList.writeWordList();
+}
+
