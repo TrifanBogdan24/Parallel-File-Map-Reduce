@@ -39,14 +39,15 @@ class MapperThread {
  public:
     int mapper_ID;
     int numInputFiles;
-    vector<pthread_mutex_t>* mutexesInputFiles;
-    vector<bool>* isProcessedInputFile;
+    vector<pthread_mutex_t*> mutexesInputFiles;
+    vector<int*> isProcessedInputFile;             // bool
     vector<string>* inputFileNames;
-    vector<MapperResult>* mapperResults;
-    pthread_mutex_t* mutexMapperResults;
+    vector<MapperResult*> mapperResults;
+    
 
  
  public:
+   // SharedVariables se ocupa de initializarea valorilor thread-ului
     MapperThread() {}
     ~MapperThread() {}
 

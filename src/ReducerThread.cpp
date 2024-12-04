@@ -17,6 +17,7 @@
 
 
 #include "ReducerThread.h"
+#include "Boolean.h"
 #include "MapperResult.h"
 
 
@@ -39,23 +40,24 @@ void* ReducerThread::routine(void *arg)
     // De abia dupa ce thread-urile Mapper s-au terminat, Reducerii isi pot incepe munca
 
     for (int i = 0; i < reducerThread->numMappers; i++) {
-        bool isMapperResultToProcess = false;
+        int isMapperResultToProcess = FALSE;
         
-        pthread_mutex_lock(&reducerThread->mutexesProcessedMapperResults->at(i));
-        if (reducerThread->isProcessedMapperResults->at(i) == false) {
-            isMapperResultToProcess = true;
-            reducerThread->isProcessedMapperResults->at(i) = true;
+        pthread_mutex_lock(reducerThread->mutexesProcessedMapperResults[i]);
+        if (*(reducerThread->isProcessedMapperResults[i]) == FALSE) {
+            isMapperResultToProcess = TRUE;
+            *(reducerThread->isProcessedMapperResults[i]) = TRUE;
         }
-        pthread_mutex_unlock(&reducerThread->mutexesProcessedMapperResults->at(i));
+        pthread_mutex_unlock(reducerThread->mutexesProcessedMapperResults[i]);
 
-        if (isMapperResultToProcess == false) {
+        if (isMapperResultToProcess == FALSE) {
             continue;
         }
 
 
 
         pthread_mutex_lock(reducerThread->mutexWordList);
-        for (MapperResultEntry &elem :  reducerThread->mapperResults->at(i).mapperResultEntries) {
+
+        for (MapperResultEntry &elem : reducerThread->mapperResults[i]->mapperResultEntries) {
             reducerThread->wordList->insertInWordList(elem);
         }
         pthread_mutex_unlock(reducerThread->mutexWordList);
@@ -64,7 +66,30 @@ void* ReducerThread::routine(void *arg)
     pthread_barrier_wait(reducerThread->barrierComputeWordList);
 
 
+    // WordList-ul a fost creat; acum trebuie sa scriem din el in fisiere
+
+    for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
+        int isOutputFileToWrite = FALSE;
+
+        pthread_mutex_lock(reducerThread->mutexesIsWrittenOutputFile[i]);
+        if (*(reducerThread->isWrittenOutputFile[i]) == FALSE) {
+            isOutputFileToWrite = TRUE;
+        }
+        pthread_mutex_unlock(reducerThread->mutexesIsWrittenOutputFile[i]);
+
+
+        if (isOutputFileToWrite == FALSE) {
+            continue;
+        }
+
+        reducerThread->wordList->writeLetterChunck('a' + i);
+
+    }
+
 
     pthread_exit(NULL);
 }
+
+
+
 

@@ -27,67 +27,6 @@ using namespace std;
 
 
 
-// pthread_mutex_t printmtx;
-
-
-
-// void write_file_IDs(ofstream &fout, vector<int> &fileIDs)
-// {
-
-//     for (unsigned int i = 0; i < fileIDs.size(); i++) {
-//         fout << fileIDs[i];
-//         if (i != fileIDs.size() - 1) {
-//             fout << " ";
-//         }
-//     }
-// }
-
-// void write_word_file_IDs(ofstream &fout, WordList &wordList, unsigned int &idx)
-// {
-//     fout << wordList[idx].word << ": [";
-    
-//     vector<int> fileIDs(wordList[idx].fileIDs.begin(), wordList[idx].fileIDs.end());
-//     sort(fileIDs.begin(), fileIDs.end());
-
-//     write_file_IDs(fout, fileIDs);
-//     fout << "]\n";
-// }
-
-
-// void write_word_list_chunk(WordList* wordList)
-// {
-//     // TODO: fol functiile de mai sus pt scriere
-// }
-
-
-
-
-// void print_map_results(vector<MapperResult> &mapperResults)
-// {
-//     for (unsigned int i = 0; i < mapperResults.size(); i++) {
-//         cout << "Mapper " << i << ":\n";
-//         for (MapperElement &pair : mapperResults[i]) {
-//             cout << "{ " << pair.word << ", " << pair.fileID << " }\n";
-//         }
-//         cout << "\n";
-//     }
-// }
-
-
-
-// void print_wordList(WordList &wordList)
-// {
-//     cout << "Word List:\n";
-
-//     for (WordListElement &elem : wordList) {
-//         cout << elem.word << "-> ";
-//         for (int fileID : elem.fileIDs) {
-//             cout << fileID << ", ";
-//         }
-//         cout << "\n";
-//     }
-//     cout << "\n";
-// }
 
 
 
@@ -129,7 +68,7 @@ int main(int argc, char* argv[])
     int numMappers = cliArgsParser.getNumMappers();            // argv[1]
     int numReducers = cliArgsParser.getNumReducers();          // argv[2]
     string inputFileName = cliArgsParser.getInputFileName();   // argv[3]
-    
+
     vector<string> mapperInputFileNames = readInptutFile(inputFileName);
 
     int numThreads = numMappers + numReducers;
@@ -148,10 +87,10 @@ int main(int argc, char* argv[])
         ret_code = 0;
 
         if (i < numMappers) {
-            MapperThread* mapperThread = sharedVariables.createMapperThread();
+            MapperThread* mapperThread = sharedVariables.createMapperThread(i);
             ret_code = pthread_create(&threads[i], NULL, MapperThread::routine, (void*) mapperThread);
         } else {
-            ReducerThread* reducerThread = sharedVariables.createReducerThread();
+            ReducerThread* reducerThread = sharedVariables.createReducerThread(i - numMappers);
             ret_code = pthread_create(&threads[i], NULL, ReducerThread::routine, (void*) reducerThread);
         }
 
@@ -169,18 +108,14 @@ int main(int argc, char* argv[])
         }
     }
 
-    return 0;
 
-    // for (int i = 0; i < numMappers; i++) {
-    //     for (MapperElement &elem : mapperResults[i]) {
-    //         insert_in_word_list(&wordList, elem);
-    //     }
-    // }
 
-    // // for debugging: print_map_results(mapperResults);
-    // // for deubgging:  print_wordList(wordList);
-    // print_map_results(mapperResults);
-    // print_wordList(wordList);
+
+    // // for debugging: sharedVariables.printMapResults();
+    // // for deubgging:  sharedVariables.printWordList();
+    sharedVariables.printMapResults();
+    cout << "\n\n\n";
+    sharedVariables.printWordList();
 
     return 0;
 }

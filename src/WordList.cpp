@@ -73,7 +73,7 @@ void WordList::insertInWordList(MapperResultEntry &mapperEntry)
 
 
 
-optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char ch)
+optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char letter)
 {
     int firstIndex = -1;
     int lastIndex = -1;
@@ -82,22 +82,23 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char ch)
     int middle = 0;
     
 
-    // Gasirea indexului primului cuvant care incepe cu caracterul "ch"
+    // Gasirea indexului primului cuvant care incepe cu caracterul "letter"
     left = 0;
     right = this->wordListEntries.size() - 1;
 
     while (left <= right) {
         middle = left + (right - left) / 2;
         
-        if (this->wordListEntries[middle].word[0] < ch) {
+        if (this->wordListEntries[middle].word[0] < letter) {
             left = middle + 1;
-        } else if (this->wordListEntries[middle].word[0] > ch) {
-            right = middle + 1;
+        } else if (this->wordListEntries[middle].word[0] > letter) {
+            right = middle - 1;
         } else {
-            // then: this->wordListEntries[middle].word[0] == ch)
+            // then: this->wordListEntries[middle].word[0] == letter)
             firstIndex = middle;
-            right = middle -1;
+            right = middle - 1;
         }
+
     }
 
 
@@ -106,22 +107,23 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char ch)
     }
 
 
-    // Gasirea indexului ultimului cuvant care incepe cu caracterul "ch"
+    // Gasirea indexului ultimului cuvant care incepe cu caracterul "letter"
     left = 0;
     right = this->wordListEntries.size() - 1;
 
     while (left <= right) {
         middle = left + (right - left) / 2;
 
-        if (wordListEntries[middle].word[0] < ch) {
+        if (wordListEntries[middle].word[0] < letter) {
             left = middle + 1;
-        } else if (wordListEntries[middle].word[0] > ch) {
+        } else if (wordListEntries[middle].word[0] > letter) {
             right = middle - 1;
         } else {
-            // then: wordListEntries[middle].word[0] == ch
+            // then: wordListEntries[middle].word[0] == letter
             lastIndex = middle;
             left = middle + 1;
         }
+
     }
 
 
@@ -129,6 +131,81 @@ optional<WordListChunck> WordList::findChunkOfCharacterInWordList(char ch)
         return nullopt;
     }
 
-    return WordListChunck(ch, firstIndex, lastIndex);
+    return WordListChunck(letter, firstIndex, lastIndex);
 }
+
+
+
+
+void WordList::writeInputFileIDs(ofstream &fout, set<int> &fileIDs)
+{
+
+    set<int>::iterator iter = fileIDs.begin(); 
+    
+    
+    while (iter != fileIDs.end()) {
+        fout << *iter;
+
+        iter++;
+        if (iter != fileIDs.end()) {
+            fout << " ";
+        }
+    }
+}
+
+
+void WordList::writeWordListEntry(ofstream &fout, int &idx)
+{
+    WordListEntry &wordListEntry = this->wordListEntries[idx];
+
+    fout << wordListEntry.word << ": [";
+    writeInputFileIDs(fout, wordListEntry.fileIDs);
+    fout << "]\n";
+}
+
+
+void WordList::writeLetterChunck(char letter)
+{
+    string outputFileName = string(1, letter) + ".txt";
+    ofstream fout(outputFileName);
+
+    if (!fout.is_open()) {
+        cerr << "[ERROR] Cannot open input file <" << outputFileName << ">\n";
+        return;
+    }
+
+
+    optional<WordListChunck> wordListChunck = findChunkOfCharacterInWordList(letter);
+
+    if (wordListChunck) {
+        for (int i = wordListChunck->firstIndex; i <= wordListChunck->lastIndex; i++) {
+            writeWordListEntry(fout, i);
+        }
+    }
+
+    fout.close();
+}
+
+
+
+void WordList::printWordList()
+{
+    cout << "Word List:\n";
+
+
+    for (WordListEntry &elem : this->wordListEntries) {
+        cout << elem.word << "-> ";
+        for (int fileID : elem.fileIDs) {
+            cout << fileID << ", ";
+        }
+        cout << "\n";
+    }
+    cout << "\n";
+}
+
+
+
+
+
+
 

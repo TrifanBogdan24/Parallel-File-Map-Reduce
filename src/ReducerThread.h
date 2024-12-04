@@ -20,6 +20,8 @@
 #include "MapperResult.h"
 #include "WordList.h"
 
+#define NUM_ALPHABET_LETTERS (int) 26
+
 
 using namespace std;
 
@@ -31,23 +33,31 @@ class ReducerThread {
  
 
  public:
-    int reducer_ID;
-    int numInputFiles;
+   int reducer_ID;
+   int numInputFiles;
 
-    int *numCompletedMappers;
-    pthread_mutex_t* mutexNumCompletedMappers;
-    pthread_cond_t* condCompletedMappers;
-    
-    vector<pthread_mutex_t>* mutexesMapperResults;
-    vector<MapperResult>* mapperResults;
+   int *numCompletedMappers;
+   pthread_mutex_t* mutexNumCompletedMappers;
+   pthread_cond_t* condCompletedMappers;
 
-    vector<bool>* isProcessedMapperResults;
-    vector<pthread_mutex_t>* mutexesProcessedMapperResults;
+   vector<pthread_mutex_t*> mutexesMapperResults;
+   vector<MapperResult*> mapperResults;
 
-    pthread_mutex_t* mutexWordList;
-    WordList* wordList;
+   vector<int*> isProcessedMapperResults;                   // bool
+   vector<pthread_mutex_t*> mutexesProcessedMapperResults;
 
-    pthread_barrier_t* barrierComputeWordList;
+   pthread_mutex_t* mutexWordList;
+   WordList* wordList;
+
+   pthread_barrier_t* barrierComputeWordList;
+
+   vector<pthread_mutex_t*> mutexesIsWrittenOutputFile;
+   vector<int*> isWrittenOutputFile;                        // bool
+
+ public:
+   // SharedVariables se ocupa de initializarea valorilor thread-ului
+   ReducerThread() {}
+   ~ReducerThread() {}
 
  public:
     static void* routine(void *arg);

@@ -15,9 +15,11 @@
 #include <cctype>
 #include <unistd.h>
 
-
+#include "Boolean.h"
 #include "MapperThread.h"
 #include "MapperResult.h"
+
+
 
 using namespace std;
 
@@ -28,39 +30,41 @@ void* MapperThread::routine(void *arg)
 {
     MapperThread* mapperThread = (MapperThread*) arg;
 
-
     for (int i = 0; i < mapperThread->numInputFiles; i++) {
         // Thread-ul va lua un fisier care nu a fost citit deja, il marcheaza ca fiind procesat, si il citeste
 
 
-        bool isFileToProcess = false;
+        int isFileToProcess = FALSE;
 
-        pthread_mutex_lock(&mapperThread->mutexesInputFiles->at(i));
-        if (mapperThread->isProcessedInputFile->at(i) == false) {
+
+        pthread_mutex_lock(mapperThread->mutexesInputFiles[i]);
+        if (*(mapperThread->isProcessedInputFile[i]) == FALSE) {
             // Daca gasesc ca un fisier nu a fost procesat, il marchez si il citesc
-            isFileToProcess = true;
-            mapperThread->isProcessedInputFile->at(i) = true;
+            isFileToProcess = TRUE;
+            *(mapperThread->isProcessedInputFile[i]) = TRUE;
         }
-        pthread_mutex_unlock(&mapperThread->mutexesInputFiles->at(i));
+        pthread_mutex_unlock(mapperThread->mutexesInputFiles[i]);
 
 
-        if (!isFileToProcess) {
+
+        if (isFileToProcess == FALSE) {
             continue;
         }
 
-        // // Citeste continutul fisierului
+
+        // Citeste continutul fisierului
         string inputFileName = mapperThread->inputFileNames->at(i);
         set<string> uniqueWords = getUniqueWordsInFile(inputFileName);
+
 
         for (set<string>::iterator itr = uniqueWords.begin(); itr != uniqueWords.end(); itr++) {
             string word = *itr;
             int file_ID = i;
             
             mapperThread
-                ->mapperResults->at(mapperThread->mapper_ID)
-                .mapperResultEntries.push_back(MapperResultEntry(word, file_ID));
+                ->mapperResults[mapperThread->mapper_ID]
+                ->mapperResultEntries.push_back(MapperResultEntry(word, file_ID));
         }
-
     }
 
     pthread_mutex_lock(mapperThread->mutexNumCompletedMappers);

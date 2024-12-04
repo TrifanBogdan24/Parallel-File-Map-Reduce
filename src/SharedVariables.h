@@ -25,10 +25,11 @@
 using namespace std;
 
 
+#define NUM_ALPHABET_LETTERS (int) 26
 
 class SharedVariables {
 
- public:
+ private:
    int numMappers;
    int numReducers;
    vector<string> inputFileNames;
@@ -37,7 +38,7 @@ class SharedVariables {
 
  private:
    vector<pthread_mutex_t> mutexesInputFileNames;
-   vector<bool> isProcessedInputFile;
+   vector<int> isProcessedInputFile;                       // bool
 
    pthread_mutex_t mutexMapperResults;
    vector<pthread_mutex_t> mutexesMapperResults;   
@@ -45,7 +46,7 @@ class SharedVariables {
 
    vector<MapperResult> mapperResults;
    vector<pthread_mutex_t> mutexesProcessedMapperResults;
-   vector<bool> isProcessedMapperResults;
+   vector<int> isProcessedMapperResults;                  // bool
 
    pthread_mutex_t mutexWordList;
    pthread_barrier_t barrierComputeWordList;
@@ -55,11 +56,22 @@ class SharedVariables {
   pthread_mutex_t mutexNumCompletedMappers;
   int numCompletedMappers;
 
+  vector<pthread_mutex_t> mutexesIsWrittenOutputFile;
+  vector<int> isWrittenOutputFile;                          // bool
+
+
  public:
-    SharedVariables(const int value_numMapper, const int value_numReducers, const vector<string> &values_inputFileNames);
+    SharedVariables(const int value_numMappers, const int value_numReducers, const vector<string> &values_inputFileNames);
     ~SharedVariables();
 
  public:
-    MapperThread* createMapperThread();
-    ReducerThread* createReducerThread();
+    MapperThread* createMapperThread(int ID_mappperThread);
+    ReducerThread* createReducerThread(int ID_reducerThread);
+
+
+ public:
+  void printMapResults();
+  void printWordList();
+ 
+
 };
