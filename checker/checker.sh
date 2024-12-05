@@ -138,9 +138,9 @@ cd ../checker
 count=0
 
 # se ruleaza implementarea paralela pe 2 si 4 thread-uri
-for M in 4 3 2 1
+for M in 1 2 4
 do
-    for R in 4 3 2 1
+    for R in 1 2 4
     do
         echo "Se ruleaza varianta cu M=$M si R=$R..."
 
@@ -216,10 +216,10 @@ do
                 # se verifica acceleratia
                 max=$(echo "${speedup} >= ${full_speedups[$count]}" | bc -l)
                 part=$(echo "${speedup} >= ${int_speedups[$count]}" | bc -l)
-                if [ $max == 1 ]
+                if [[ $max == 1 ]]
                 then
                     scalability=$((scalability+16))
-                elif [ $part == 1 ]
+                elif [[ $part == 1 ]]
                 then
                     scalability=$((scalability+8))
                     echo "W: Acceleratia de la acest test este prea mica (punctaj partial)"

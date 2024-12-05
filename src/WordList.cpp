@@ -26,7 +26,8 @@ void WordList::insertInMapperResultConcatenation(MapperResultEntry &mapperResult
     string word = mapperResultEntry.word;
     int fileID = mapperResultEntry.fileID;
 
-    if (this->mapperResultConcatenation.find(word) != this->mapperResultConcatenation.end()) {
+    if (this->mapperResultConcatenation.find(word) == this->mapperResultConcatenation.end()) {
+        // Nu s-a gasit cuvantul in dictionars
         this->mapperResultConcatenation[word] = {fileID};
         return;
     } else {
