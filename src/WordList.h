@@ -68,7 +68,7 @@ class WordList {
     ~WordList() {}
 
  public:
-    void insertInWordList(MapperResultEntry &mapperEntry);
+    void insertInWordList(MapperResultEntry &mapperResultEntry);
  private:
    WordListChunck findChunkOfCharacterInWordList(char letter);
    static bool compareEntries(const WordListEntry &entry1, const WordListEntry &entry2);

@@ -22,12 +22,10 @@ using namespace std;
 
 
 
-
-
-void WordList::insertInWordList(MapperResultEntry &mapperEntry)
+void WordList::insertInWordList(MapperResultEntry &mapperResultEntry)
 {
-    string word = mapperEntry.word;
-    int fileID = mapperEntry.fileID;
+    string word = mapperResultEntry.word;
+    int fileID = mapperResultEntry.fileID;
 
     int length = (int) wordListEntries.size();
 
@@ -179,7 +177,7 @@ void WordList::writeLetterChunck(char letter)
 
     vector<WordListEntry> selectedEntries(
         this->wordListEntries.begin() + firstIndex,
-        this->wordListEntries.begin() + lastIndex
+        this->wordListEntries.begin() + lastIndex + 1
     );
 
     sort(selectedEntries.begin(), selectedEntries.end(), compareEntries);

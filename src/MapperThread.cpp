@@ -97,21 +97,24 @@ set<string> MapperThread::getUniqueWordsInFile(string &inputFileName)
     string line;
 
     while (getline(fin, line)) {
-        for (char& chr : line) {
-            if (!isalpha(chr)) {
-                chr = ' ';
-            } else {
-                chr = tolower(chr);
+        string word;
+
+        for (char &ch : line) {
+            if (ch == ' ' || ch == '\t') {
+                if (word.empty()) {
+                    continue;
+                }
+
+                uniqueWords.insert(word);
+                word.clear();
+                continue;
+            } else if (isalpha(ch)) {
+                word.push_back(tolower(ch));
             }
         }
 
-        stringstream ss(line);
-        string word;
-        
-        while (ss >> word) {
-            if (!word.empty()) {
-                uniqueWords.insert(word);
-            }
+        if (!word.empty()) {
+            uniqueWords.insert(word);
         }
     }
 
