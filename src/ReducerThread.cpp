@@ -57,12 +57,21 @@ void* ReducerThread::routine(void *arg)
         pthread_mutex_lock(reducerThread->mutexWordList);
 
         for (MapperResultEntry &elem : reducerThread->mapperResults[i]->mapperResultEntries) {
-            reducerThread->wordList->insertInWordList(elem);
+            reducerThread->wordList->insertInMapperResultConcatenation(elem);
         }
+
         pthread_mutex_unlock(reducerThread->mutexWordList);
     }
 
     pthread_barrier_wait(reducerThread->barrierComputeWordList);
+
+
+    pthread_mutex_lock(reducerThread->mutexIsCompletedMapperResultsConcatenation);
+    if (*(reducerThread->isCompletedMapperResultsConcatenation) == FALSE) {
+        reducerThread->wordList->createWordListFromMapperResultConcatenation();
+        *(reducerThread->isCompletedMapperResultsConcatenation) = TRUE;
+    }
+    pthread_mutex_unlock(reducerThread->mutexIsCompletedMapperResultsConcatenation);
 
 
     // WordList-ul a fost creat; acum trebuie sa scriem din el in fisiere

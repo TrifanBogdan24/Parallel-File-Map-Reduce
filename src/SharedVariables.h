@@ -54,6 +54,10 @@ class SharedVariables {
   pthread_mutex_t mutexNumCompletedMappers;
   int numCompletedMappers;
 
+  pthread_mutex_t mutexIsCompletedMapperResultsConcatenation;
+  int isCompletedMapperResultsConcatenation;                 // bool
+
+
   vector<pthread_mutex_t> mutexesIsWrittenOutputFile;
   vector<int> isWrittenOutputFile;                          // bool
 

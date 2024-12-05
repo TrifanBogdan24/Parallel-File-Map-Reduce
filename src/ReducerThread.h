@@ -51,8 +51,15 @@ class ReducerThread {
 
    pthread_barrier_t* barrierComputeWordList;
 
+   pthread_mutex_t* mutexIsCompletedMapperResultsConcatenation;
+   int* isCompletedMapperResultsConcatenation;                // bool
+
+
+
    vector<pthread_mutex_t*> mutexesIsWrittenOutputFile;
    vector<int*> isWrittenOutputFile;                        // bool
+
+
 
  public:
    // SharedVariables se ocupa de initializarea valorilor thread-ului

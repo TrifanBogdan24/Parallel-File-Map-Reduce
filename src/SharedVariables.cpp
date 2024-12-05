@@ -63,6 +63,9 @@ SharedVariables::SharedVariables(const int value_numMappers, const int value_num
     }
 
 
+    isCompletedMapperResultsConcatenation = FALSE;
+    pthread_mutex_init(&mutexIsCompletedMapperResultsConcatenation, NULL);
+
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
         isWrittenOutputFile[i] = 0;
         pthread_mutex_init(&mutexesIsWrittenOutputFile[i], NULL);
@@ -94,6 +97,7 @@ SharedVariables::~SharedVariables()
     }
 
     pthread_mutex_destroy(&mutexMapperResults);
+    pthread_mutex_destroy(&mutexIsCompletedMapperResultsConcatenation);
 
     pthread_mutex_destroy(&mutexWordList);
     pthread_mutex_destroy(&mutexNumCompletedMappers);
@@ -162,6 +166,10 @@ ReducerThread* SharedVariables::createReducerThread(int ID_reducerThread)
 
 
     reducerThread->barrierComputeWordList = &this->barrierComputeWordList;
+
+    reducerThread->isCompletedMapperResultsConcatenation = &this->isCompletedMapperResultsConcatenation;
+    reducerThread->mutexIsCompletedMapperResultsConcatenation = &this->mutexIsCompletedMapperResultsConcatenation;
+
 
 
     reducerThread->isWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);

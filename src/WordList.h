@@ -62,13 +62,15 @@ class WordListChunck {
 class WordList {
  private:
     vector<WordListEntry> wordListEntries;
+    map<string, set<int>> mapperResultConcatenation;
  
  public:
     WordList() {}
     ~WordList() {}
 
  public:
-    void insertInWordList(MapperResultEntry &mapperResultEntry);
+    void insertInMapperResultConcatenation(MapperResultEntry &mapperResultEntry);
+    void createWordListFromMapperResultConcatenation();
  private:
    WordListChunck findChunkOfCharacterInWordList(char letter);
    static bool compareEntries(const WordListEntry &entry1, const WordListEntry &entry2);

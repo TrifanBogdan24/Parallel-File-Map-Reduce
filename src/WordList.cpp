@@ -21,51 +21,32 @@
 using namespace std;
 
 
-
-void WordList::insertInWordList(MapperResultEntry &mapperResultEntry)
+void WordList::insertInMapperResultConcatenation(MapperResultEntry &mapperResultEntry)
 {
     string word = mapperResultEntry.word;
     int fileID = mapperResultEntry.fileID;
 
-    int length = (int) wordListEntries.size();
-
-    if (length == 0) {
-        this->wordListEntries.push_back(WordListEntry(word, {fileID}));
+    if (this->mapperResultConcatenation.find(word) != this->mapperResultConcatenation.end()) {
+        this->mapperResultConcatenation[word] = {fileID};
+        return;
+    } else {
+        this->mapperResultConcatenation[word].insert(fileID);
         return;
     }
+}
 
-    if (word < this->wordListEntries[0].word) {
-        this->wordListEntries.insert(wordListEntries.begin(), WordListEntry(word, {fileID}));
-        return;
+
+
+void WordList::createWordListFromMapperResultConcatenation()
+{
+    this->wordListEntries.clear();
+    for (const auto& [word, fileIDs] : mapperResultConcatenation) {
+        wordListEntries.push_back(WordListEntry(word, fileIDs));
     }
 
-    if (word > this->wordListEntries[length - 1].word) {
-        this->wordListEntries.push_back(WordListEntry(word, {fileID}));
-        return;
-    }
-
-
-    int left = 0;
-    int right = length - 1;
-    int middle = 0;
-
-    while (left <= right) {
-        middle = left + (right - left) / 2;
-
-        
-        if (this->wordListEntries[middle].word < word) {
-            left = middle + 1;
-        } else if (this->wordListEntries[middle].word > word) {
-            right = middle - 1;
-        } else {
-            // then: this->wordListEntries[middle].word == word
-            // Updating word's set
-            this->wordListEntries[middle].fileIDs.insert(fileID);
-            return;
-        }
-    }
-
-    this->wordListEntries.insert(wordListEntries.begin() + left, WordListEntry(word, {fileID}));
+    std::sort(wordListEntries.begin(), wordListEntries.end(), [](const WordListEntry& a, const WordListEntry& b) {
+        return a.word < b.word;
+    });
 }
 
 
