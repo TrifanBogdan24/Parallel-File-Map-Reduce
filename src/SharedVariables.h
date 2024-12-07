@@ -24,7 +24,6 @@
 using namespace std;
 
 
-#define NUM_ALPHABET_LETTERS (int) 26
 
 class SharedVariables {
  private:
@@ -46,16 +45,14 @@ class SharedVariables {
    vector<pthread_mutex_t> mutexesProcessedMapperResults;
    vector<int> isProcessedMapperResults;                  // bool
 
-   pthread_mutex_t mutexWordList;
    pthread_barrier_t barrierComputeWordList;
+
+   vector<pthread_mutex_t> mutexesWordListLetterChuncks;
    WordList wordList;
 
   pthread_cond_t condCompletedMappers;
   pthread_mutex_t mutexNumCompletedMappers;
   int numCompletedMappers;
-
-  pthread_mutex_t mutexIsCompletedMapperResultsConcatenation;
-  int isCompletedMapperResultsConcatenation;                 // bool
 
 
   vector<pthread_mutex_t> mutexesIsWrittenOutputFile;
@@ -72,9 +69,7 @@ class SharedVariables {
 
 
  public:
-  void writeWordList();
-  void printMapResults();
-  void printWordList();
- 
-
+  void printMapResultsToStdout();
+  void writeWordListToFile();
+  void printWordListToStdout();
 };

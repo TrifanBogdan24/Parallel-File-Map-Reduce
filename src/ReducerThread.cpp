@@ -28,11 +28,9 @@ void* ReducerThread::routine(void *arg)
     ReducerThread* reducerThread = (ReducerThread*) arg;
 
     pthread_mutex_lock(reducerThread->mutexNumCompletedMappers);
-
     while (*(reducerThread->numCompletedMappers) != reducerThread->numMappers) {
         pthread_cond_wait(reducerThread->condCompletedMappers, reducerThread->mutexNumCompletedMappers);
     }
-
     pthread_mutex_unlock(reducerThread->mutexNumCompletedMappers);
 
 
@@ -54,24 +52,19 @@ void* ReducerThread::routine(void *arg)
 
 
 
-        pthread_mutex_lock(reducerThread->mutexWordList);
 
         for (MapperResultEntry &elem : reducerThread->mapperResults[i]->mapperResultEntries) {
+            int idxFirstWordLetter = elem.word[0] - 'a';
+            pthread_mutex_lock(reducerThread->mutexesWordListLetterChuncks[idxFirstWordLetter]);
             reducerThread->wordList->insertInMapperResultConcatenation(elem);
+            pthread_mutex_unlock(reducerThread->mutexesWordListLetterChuncks[idxFirstWordLetter]);
         }
 
-        pthread_mutex_unlock(reducerThread->mutexWordList);
     }
+
 
     pthread_barrier_wait(reducerThread->barrierComputeWordList);
 
-
-    pthread_mutex_lock(reducerThread->mutexIsCompletedMapperResultsConcatenation);
-    if (*(reducerThread->isCompletedMapperResultsConcatenation) == FALSE) {
-        reducerThread->wordList->createWordListFromMapperResultConcatenation();
-        *(reducerThread->isCompletedMapperResultsConcatenation) = TRUE;
-    }
-    pthread_mutex_unlock(reducerThread->mutexIsCompletedMapperResultsConcatenation);
 
 
     // WordList-ul a fost creat; acum trebuie sa scriem din el in fisiere
@@ -90,8 +83,11 @@ void* ReducerThread::routine(void *arg)
             continue;
         }
 
-        reducerThread->wordList->writeLetterChunck('a' + i);
 
+
+        // reducerThread->wordList->createLetterChunck(i);
+        // reducerThread->wordList->sortLetterChunck(i);
+        // reducerThread->wordList->writeLetterChunck(i);
     }
 
 

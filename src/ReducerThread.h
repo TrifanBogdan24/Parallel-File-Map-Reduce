@@ -46,7 +46,7 @@ class ReducerThread {
    vector<int*> isProcessedMapperResults;                   // bool
    vector<pthread_mutex_t*> mutexesProcessedMapperResults;
 
-   pthread_mutex_t* mutexWordList;
+   vector<pthread_mutex_t*> mutexesWordListLetterChuncks;
    WordList* wordList;
 
    pthread_barrier_t* barrierComputeWordList;

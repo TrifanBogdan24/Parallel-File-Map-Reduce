@@ -63,16 +63,16 @@ SharedVariables::SharedVariables(const int value_numMappers, const int value_num
     }
 
 
-    isCompletedMapperResultsConcatenation = FALSE;
-    pthread_mutex_init(&mutexIsCompletedMapperResultsConcatenation, NULL);
+    this->wordList.wordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
+    this->mutexesWordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
-        isWrittenOutputFile[i] = 0;
+        pthread_mutex_init(&mutexesWordListLetterChuncks[i], NULL);
+        isWrittenOutputFile[i] = FALSE;
         pthread_mutex_init(&mutexesIsWrittenOutputFile[i], NULL);
     }
 
 
-    pthread_mutex_init(&mutexWordList, NULL);
     pthread_mutex_init(&mutexNumCompletedMappers, NULL);
     pthread_mutex_init(&mutexMapperResults, NULL);
 }
@@ -93,13 +93,11 @@ SharedVariables::~SharedVariables()
     }
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
+        pthread_mutex_destroy(&mutexesWordListLetterChuncks[i]);
         pthread_mutex_destroy(&mutexesIsWrittenOutputFile[i]);
     }
 
     pthread_mutex_destroy(&mutexMapperResults);
-    pthread_mutex_destroy(&mutexIsCompletedMapperResultsConcatenation);
-
-    pthread_mutex_destroy(&mutexWordList);
     pthread_mutex_destroy(&mutexNumCompletedMappers);
 }
 
@@ -151,7 +149,6 @@ ReducerThread* SharedVariables::createReducerThread(int ID_reducerThread)
     reducerThread->mutexNumCompletedMappers = &this->mutexNumCompletedMappers;
     reducerThread->condCompletedMappers = &this->condCompletedMappers;
     reducerThread->wordList = &this->wordList;
-    reducerThread->mutexWordList = &this->mutexWordList;
 
     reducerThread->isProcessedMapperResults.resize(numMappers);    
     reducerThread->mutexesProcessedMapperResults.resize(numMappers);
@@ -167,15 +164,13 @@ ReducerThread* SharedVariables::createReducerThread(int ID_reducerThread)
 
     reducerThread->barrierComputeWordList = &this->barrierComputeWordList;
 
-    reducerThread->isCompletedMapperResultsConcatenation = &this->isCompletedMapperResultsConcatenation;
-    reducerThread->mutexIsCompletedMapperResultsConcatenation = &this->mutexIsCompletedMapperResultsConcatenation;
 
-
-
+    reducerThread->mutexesWordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
     reducerThread->isWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);
     reducerThread->mutexesIsWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
+        reducerThread->mutexesWordListLetterChuncks[i] = &(this->mutexesWordListLetterChuncks[i]);
         reducerThread->isWrittenOutputFile[i] = &(this->isWrittenOutputFile[i]);
         reducerThread->mutexesIsWrittenOutputFile[i] = &(this->mutexesIsWrittenOutputFile[i]);
     }
@@ -186,7 +181,7 @@ ReducerThread* SharedVariables::createReducerThread(int ID_reducerThread)
 
 
 
-void SharedVariables::printMapResults()
+void SharedVariables::printMapResultsToStdout()
 {
     
     for (unsigned int i = 0; i < this->mapperResults.size(); i++) {
@@ -198,14 +193,14 @@ void SharedVariables::printMapResults()
     }
 }
 
-void SharedVariables::printWordList()
+void SharedVariables::printWordListToStdout()
 {
-    this->wordList.printWordList();
+    this->wordList.printWordListToStdout();
 }
 
 
-void SharedVariables::writeWordList()
+void SharedVariables::writeWordListToFile()
 {
-    this->wordList.writeWordList();
+    this->wordList.writeWordListToFile();
 }
 

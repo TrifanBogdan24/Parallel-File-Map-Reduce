@@ -18,6 +18,9 @@
 
 #include "MapperResult.h"
 
+#define NUM_ALPHABET_LETTERS (int) 26
+
+
 using namespace std;
 
 class WordListEntry {
@@ -43,44 +46,45 @@ class WordListEntry {
 };
 
 
-class WordListChunck {
+class WordListLetterChunck {
  public:
-    char ch;
-    int firstIndex;
-    int lastIndex;
+   vector<WordListEntry> letterChunckEntries;
 
  public:
-    WordListChunck(char ch_value, int firstIndex_value, int lastIndex_value):
-        ch(ch_value), firstIndex(firstIndex_value), lastIndex(lastIndex_value)
-    {
-    }
-
-    ~WordListChunck() {}
+    WordListLetterChunck() {}
+    ~WordListLetterChunck() {}
 };
 
 
 class WordList {
- private:
-    vector<WordListEntry> wordListEntries;
-    map<string, set<int>> mapperResultConcatenation;
+ public:
+    vector<map<string, set<int>>> mapperResultConcatenation;
+    vector<WordListLetterChunck> wordListLetterChuncks;
  
  public:
-    WordList() {}
+    WordList()
+    {
+      this->mapperResultConcatenation.resize(NUM_ALPHABET_LETTERS);
+      this->wordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
+    }
     ~WordList() {}
 
  public:
     void insertInMapperResultConcatenation(MapperResultEntry &mapperResultEntry);
-    void createWordListFromMapperResultConcatenation();
+    void createLetterChunck(int idxFirstWordLetter);
+    void sortLetterChunck(int idxFirstWordLetter);
+
  private:
-   WordListChunck findChunkOfCharacterInWordList(char letter);
    static bool compareEntries(const WordListEntry &entry1, const WordListEntry &entry2);
    void writeInputFileIDs(ostream &fout, set<int> &fileIDs);
    void writeWordListEntry(ostream &fout, WordListEntry &wordListEntry);
  public:
-   void writeLetterChunck(char letter);
+   void writeLetterChunck(int idxFirstWordLetter);
+
 
  public:
-   void writeWordList();  // to word-list.txt
-   void printWordList();
+   void writeWordList(ostream& fout);
+   void writeWordListToFile();  // to word-list.txt
+   void printWordListToStdout();
 
 };

@@ -112,12 +112,10 @@ int main(int argc, char* argv[])
 
 
 
-    // // for debugging: sharedVariables.printMapResults();
-    // // for deubgging:  sharedVariables.printWordList();
-    // sharedVariables.printMapResults();
-    // cout << "\n\n\n";
-    // sharedVariables.printWordList();
-    sharedVariables.writeWordList();
+    // // for debugging: sharedVariables.printMapResultsToStdou();
+    // // for deubgging:  sharedVariables.printWordListToStdout();
+    // // for deubgging:  sharedVariables.writeWordListToFile();
+
 
     return 0;
 }
