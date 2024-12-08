@@ -41,14 +41,10 @@ void WordList::insertInMapperResultConcatenation(MapperResultEntry &mapperResult
 
 void WordList::createLetterChunck(int idxFirstWordLetter)
 {
-    cout << idxFirstWordLetter << ": ";
-
     for (const auto& [word, fileIDs] : mapperResultConcatenation[idxFirstWordLetter]) {
         this->wordListLetterChuncks[idxFirstWordLetter]
             .letterChunckEntries.push_back(WordListEntry(word, fileIDs));
     }
-
-    cout << "da\n";
 }
 
 
@@ -145,15 +141,8 @@ void WordList::writeLetterChunck(int idxFirstWordLetter)
         return;
     }
 
-
-
-
-
-
-
     for (WordListEntry &entry : this->wordListLetterChuncks[idxFirstWordLetter].letterChunckEntries) {
         writeWordListEntry(fout, entry);
-        fout << "\n";
     }
 
     fout.close();

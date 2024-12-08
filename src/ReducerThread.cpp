@@ -36,24 +36,27 @@ void* ReducerThread::routine(void *arg)
 
     // De abia dupa ce thread-urile Mapper s-au terminat, Reducerii isi pot incepe munca
 
-    for (int i = 0; i < reducerThread->numMappers; i++) {
-        int isMapperResultToProcess = FALSE;
-        
-        pthread_mutex_lock(reducerThread->mutexesProcessedMapperResults[i]);
-        if (*(reducerThread->isProcessedMapperResults[i]) == FALSE) {
-            isMapperResultToProcess = TRUE;
-            *(reducerThread->isProcessedMapperResults[i]) = TRUE;
+
+    while (true) {
+        bool isEmptyMapperResultQueue = false;
+        int mapperResultIndex = 0;
+
+        pthread_mutex_lock(reducerThread->mutexQueueMapperResultIndices);
+        if (reducerThread->queueMapperResultIndices->size() > 0) {
+            mapperResultIndex = reducerThread->queueMapperResultIndices->front();
+            reducerThread->queueMapperResultIndices->pop();
+        } else {
+            isEmptyMapperResultQueue = true;
         }
-        pthread_mutex_unlock(reducerThread->mutexesProcessedMapperResults[i]);
+        pthread_mutex_unlock(reducerThread->mutexQueueMapperResultIndices);
 
-        if (isMapperResultToProcess == FALSE) {
-            continue;
+
+        if (isEmptyMapperResultQueue == true) {
+            break;
         }
 
 
-
-
-        for (MapperResultEntry &elem : reducerThread->mapperResults[i]->mapperResultEntries) {
+        for (MapperResultEntry &elem : reducerThread->mapperResults->at(mapperResultIndex).mapperResultEntries) {
             int idxFirstWordLetter = elem.word[0] - 'a';
             pthread_mutex_lock(reducerThread->mutexesWordListLetterChuncks[idxFirstWordLetter]);
             reducerThread->wordList->insertInMapperResultConcatenation(elem);
@@ -63,31 +66,31 @@ void* ReducerThread::routine(void *arg)
     }
 
 
-    pthread_barrier_wait(reducerThread->barrierComputeWordList);
-
-
 
     // WordList-ul a fost creat; acum trebuie sa scriem din el in fisiere
 
-    for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
-        int isOutputFileToWrite = FALSE;
+    while (true) {
+        bool isEmptyOutputFileQueue = false;
+        int letterIndex = 0;
 
-        pthread_mutex_lock(reducerThread->mutexesIsWrittenOutputFile[i]);
-        if (*(reducerThread->isWrittenOutputFile[i]) == FALSE) {
-            isOutputFileToWrite = TRUE;
+        pthread_mutex_lock(reducerThread->mutexQueueOutputFileIndices);
+        if (reducerThread->queueOutputFileIndices->size() > 0) {
+            letterIndex = reducerThread->queueOutputFileIndices->front();
+            reducerThread->queueOutputFileIndices->pop();
+        } else {
+            isEmptyOutputFileQueue = true;
         }
-        pthread_mutex_unlock(reducerThread->mutexesIsWrittenOutputFile[i]);
+        pthread_mutex_unlock(reducerThread->mutexQueueOutputFileIndices);
 
-
-        if (isOutputFileToWrite == FALSE) {
-            continue;
+        if (isEmptyOutputFileQueue == true) {
+            break;
         }
 
 
-
+        // Da segmentation
         // reducerThread->wordList->createLetterChunck(i);
         // reducerThread->wordList->sortLetterChunck(i);
-        // reducerThread->wordList->writeLetterChunck(i);
+        // // reducerThread->wordList->writeLetterChunck(i);
     }
 
 

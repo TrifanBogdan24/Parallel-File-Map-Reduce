@@ -32,36 +32,35 @@ void* MapperThread::routine(void *arg)
 {
     MapperThread* mapperThread = (MapperThread*) arg;
 
-    for (int i = 0; i < mapperThread->numInputFiles; i++) {
-        // Thread-ul va lua un fisier care nu a fost citit deja, il marcheaza ca fiind procesat, si il citeste
 
+    while (true) {
+        bool isEmptyInputFileQueue = false;
+        int fileIndex = 0;
 
-        int isFileToProcess = FALSE;
-
-
-        pthread_mutex_lock(mapperThread->mutexesInputFiles[i]);
-        if (*(mapperThread->isProcessedInputFile[i]) == FALSE) {
-            // Daca gasesc ca un fisier nu a fost procesat, il marchez si il citesc
-            isFileToProcess = TRUE;
-            *(mapperThread->isProcessedInputFile[i]) = TRUE;
+        pthread_mutex_lock(mapperThread->mutexQueueInputFileIndices);
+        if (mapperThread->queueInputFileIndices->size() > 0) {
+            fileIndex = mapperThread->queueInputFileIndices->front();
+            mapperThread->queueInputFileIndices->pop();
+        } else {
+            isEmptyInputFileQueue = true;
         }
-        pthread_mutex_unlock(mapperThread->mutexesInputFiles[i]);
+        pthread_mutex_unlock(mapperThread->mutexQueueInputFileIndices);
 
 
-
-        if (isFileToProcess == FALSE) {
-            continue;
+        if (isEmptyInputFileQueue == true) {
+            break;
         }
+
 
 
         // Citeste continutul fisierului
-        string inputFileName = mapperThread->inputFileNames->at(i);
+        string inputFileName = mapperThread->inputFileNames->at(fileIndex);
         set<string> uniqueWords = mapperThread->getUniqueWordsInFile(inputFileName);
 
 
         for (set<string>::iterator itr = uniqueWords.begin(); itr != uniqueWords.end(); itr++) {
             string word = *itr;
-            int file_ID = i + 1;
+            int file_ID = fileIndex + 1;
             
             mapperThread
                 ->mapperResults[mapperThread->mapper_ID]

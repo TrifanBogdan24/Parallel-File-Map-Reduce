@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <queue>
 #include <algorithm>
 
 // C libraries
@@ -38,8 +39,10 @@ class MapperThread {
  public:
     int mapper_ID;
     int numInputFiles;
-    vector<pthread_mutex_t*> mutexesInputFiles;
-    vector<int*> isProcessedInputFile;             // bool
+    
+    queue<int>* queueInputFileIndices;
+    pthread_mutex_t* mutexQueueInputFileIndices;
+
     vector<string>* inputFileNames;
     vector<MapperResult*> mapperResults;
     

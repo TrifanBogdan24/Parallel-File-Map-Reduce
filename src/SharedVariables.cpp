@@ -39,28 +39,23 @@ SharedVariables::SharedVariables(const int value_numMappers, const int value_num
     pthread_cond_init(&condCompletedMappers, NULL);
     pthread_barrier_init(&barrierComputeWordList, NULL, numReducers);
 
-    mutexesInputFileNames.resize(numInputFiles);
-    isProcessedInputFile.resize(numInputFiles);
+
+    pthread_mutex_init(&mutexQueueInputFileIndices, NULL);
 
     for (int i = 0; i < numInputFiles; i++) {
-        pthread_mutex_init(&mutexesInputFileNames[i], NULL);
-        isProcessedInputFile[i] = FALSE;
+        queueInputFileIndices.push(i);
     }
 
-    mutexesMapperResults.resize(numMappers);
+
+
     mapperResults.resize(numMappers);
 
-    mutexesProcessedMapperResults.resize(numMappers);
-    isProcessedMapperResults.resize(numMappers);
-
-    isWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);
-    mutexesIsWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);
-
     for (int i = 0; i < numMappers; i++) {
-        isProcessedMapperResults[i] = FALSE;
-        pthread_mutex_init(&mutexesMapperResults[i], NULL);
-        pthread_mutex_init(&mutexesProcessedMapperResults[i], NULL);
+        queueMapperResultIndices.push(i);
     }
+
+
+    pthread_mutex_init(&mutexQueueOuputFileIndices, NULL);
 
 
     this->wordList.wordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
@@ -68,13 +63,12 @@ SharedVariables::SharedVariables(const int value_numMappers, const int value_num
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
         pthread_mutex_init(&mutexesWordListLetterChuncks[i], NULL);
-        isWrittenOutputFile[i] = FALSE;
-        pthread_mutex_init(&mutexesIsWrittenOutputFile[i], NULL);
+        this->queueOutputFileIndices.push(i);
     }
 
 
     pthread_mutex_init(&mutexNumCompletedMappers, NULL);
-    pthread_mutex_init(&mutexMapperResults, NULL);
+    pthread_mutex_init(&mutexQueueMapperResultIndices, NULL);
 }
 
 
@@ -83,21 +77,16 @@ SharedVariables::~SharedVariables()
     pthread_cond_destroy(&condCompletedMappers);
     pthread_barrier_destroy(&barrierComputeWordList);    
 
-    for (int i = 0; i < numInputFiles; i++) {
-        pthread_mutex_destroy(&mutexesInputFileNames[i]);
-    }
-
-    for (int i = 0; i < numMappers; i++) {
-        pthread_mutex_destroy(&mutexesMapperResults[i]);
-        pthread_mutex_destroy(&mutexesProcessedMapperResults[i]);
-    }
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
         pthread_mutex_destroy(&mutexesWordListLetterChuncks[i]);
-        pthread_mutex_destroy(&mutexesIsWrittenOutputFile[i]);
     }
 
-    pthread_mutex_destroy(&mutexMapperResults);
+    pthread_mutex_destroy(&mutexQueueInputFileIndices);
+    pthread_mutex_destroy(&mutexQueueOuputFileIndices);
+
+    pthread_mutex_destroy(&mutexQueueMapperResultIndices);
+
     pthread_mutex_destroy(&mutexNumCompletedMappers);
 }
 
@@ -115,16 +104,8 @@ MapperThread* SharedVariables::createMapperThread(int ID_mappperThread)
     mapperThread->inputFileNames = &this->inputFileNames;
     
 
-    mapperThread->mutexesInputFiles.resize(numInputFiles);
-    mapperThread->isProcessedInputFile.resize(numInputFiles);
-
-
-    for (int i = 0; i < numInputFiles; i++) {
-        mapperThread->isProcessedInputFile[i] = &(this->isProcessedInputFile[i]);
-        mapperThread->mutexesInputFiles[i] = &(this->mutexesInputFileNames[i]);
-    }
-
-
+    mapperThread->queueInputFileIndices = &this->queueInputFileIndices;
+    mapperThread->mutexQueueInputFileIndices = &this->mutexQueueInputFileIndices;
 
     mapperThread->condCompletedMappers = &this->condCompletedMappers;
     mapperThread->mutexNumCompletedMappers = &this->mutexNumCompletedMappers;
@@ -150,29 +131,20 @@ ReducerThread* SharedVariables::createReducerThread(int ID_reducerThread)
     reducerThread->condCompletedMappers = &this->condCompletedMappers;
     reducerThread->wordList = &this->wordList;
 
-    reducerThread->isProcessedMapperResults.resize(numMappers);    
-    reducerThread->mutexesProcessedMapperResults.resize(numMappers);
-    reducerThread->mapperResults.resize(numMappers);
-
-
-    for (int i = 0; i < numMappers; i++) {
-        reducerThread->isProcessedMapperResults[i] = &(this->isProcessedMapperResults[i]);
-        reducerThread->mutexesProcessedMapperResults[i] = &(this->mutexesProcessedMapperResults[i]);
-        reducerThread->mapperResults[i] = &(this->mapperResults[i]);
-    }
-
+    reducerThread->queueMapperResultIndices = &this->queueMapperResultIndices;
+    reducerThread->mutexQueueMapperResultIndices = &this->mutexQueueMapperResultIndices;
+    reducerThread->mapperResults = &this->mapperResults;
 
     reducerThread->barrierComputeWordList = &this->barrierComputeWordList;
 
+    reducerThread->queueOutputFileIndices = &this->queueOutputFileIndices;
+    reducerThread->mutexQueueOutputFileIndices = &this->mutexQueueOuputFileIndices;
+
 
     reducerThread->mutexesWordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
-    reducerThread->isWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);
-    reducerThread->mutexesIsWrittenOutputFile.resize(NUM_ALPHABET_LETTERS);
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
         reducerThread->mutexesWordListLetterChuncks[i] = &(this->mutexesWordListLetterChuncks[i]);
-        reducerThread->isWrittenOutputFile[i] = &(this->isWrittenOutputFile[i]);
-        reducerThread->mutexesIsWrittenOutputFile[i] = &(this->mutexesIsWrittenOutputFile[i]);
     }
 
     return reducerThread;

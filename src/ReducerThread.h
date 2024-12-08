@@ -7,8 +7,8 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <queue>
 #include <algorithm>
-#include <optional>
 
 // C libraries
 #include <pthread.h>
@@ -40,24 +40,20 @@ class ReducerThread {
    pthread_mutex_t* mutexNumCompletedMappers;
    pthread_cond_t* condCompletedMappers;
 
-   vector<pthread_mutex_t*> mutexesMapperResults;
-   vector<MapperResult*> mapperResults;
-
-   vector<int*> isProcessedMapperResults;                   // bool
-   vector<pthread_mutex_t*> mutexesProcessedMapperResults;
+   queue<int>* queueMapperResultIndices;
+   pthread_mutex_t* mutexQueueMapperResultIndices;
+   vector<MapperResult>* mapperResults;
 
    vector<pthread_mutex_t*> mutexesWordListLetterChuncks;
    WordList* wordList;
 
    pthread_barrier_t* barrierComputeWordList;
 
-   pthread_mutex_t* mutexIsCompletedMapperResultsConcatenation;
-   int* isCompletedMapperResultsConcatenation;                // bool
+
+   queue<int>* queueOutputFileIndices;
+   pthread_mutex_t* mutexQueueOutputFileIndices;
 
 
-
-   vector<pthread_mutex_t*> mutexesIsWrittenOutputFile;
-   vector<int*> isWrittenOutputFile;                        // bool
 
 
 

@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <queue>
 #include <algorithm>
 
 // C libraries
@@ -33,30 +34,29 @@ class SharedVariables {
  private:
    int numInputFiles;
 
- private:
-   vector<pthread_mutex_t> mutexesInputFileNames;
-   vector<int> isProcessedInputFile;                       // bool
-
-   pthread_mutex_t mutexMapperResults;
-   vector<pthread_mutex_t> mutexesMapperResults;   
+ public:
+   queue<int> queueInputFileIndices;
+   pthread_mutex_t mutexQueueInputFileIndices;
 
 
+   queue<int> queueOutputFileIndices;
+   pthread_mutex_t mutexQueueOuputFileIndices;
+  
+
+   queue<int> queueMapperResultIndices;
+   pthread_mutex_t mutexQueueMapperResultIndices;
    vector<MapperResult> mapperResults;
-   vector<pthread_mutex_t> mutexesProcessedMapperResults;
-   vector<int> isProcessedMapperResults;                  // bool
 
    pthread_barrier_t barrierComputeWordList;
 
    vector<pthread_mutex_t> mutexesWordListLetterChuncks;
    WordList wordList;
 
-  pthread_cond_t condCompletedMappers;
-  pthread_mutex_t mutexNumCompletedMappers;
-  int numCompletedMappers;
+   pthread_cond_t condCompletedMappers;
+   pthread_mutex_t mutexNumCompletedMappers;
+   int numCompletedMappers;
 
 
-  vector<pthread_mutex_t> mutexesIsWrittenOutputFile;
-  vector<int> isWrittenOutputFile;                          // bool
 
 
  public:
