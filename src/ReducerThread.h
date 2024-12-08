@@ -36,7 +36,7 @@ class ReducerThread {
    int reducer_ID;
    int numInputFiles;
 
-   int *numCompletedMappers;
+   int* numCompletedMappers;
    pthread_mutex_t* mutexNumCompletedMappers;
    pthread_cond_t* condCompletedMappers;
 
@@ -44,8 +44,12 @@ class ReducerThread {
    pthread_mutex_t* mutexQueueMapperResultIndices;
    vector<MapperResult>* mapperResults;
 
-   vector<pthread_mutex_t*> mutexesWordListLetterChuncks;
+   vector<pthread_mutex_t*> mutexesInsertInWordListConcatenation;
    WordList* wordList;
+
+   pthread_mutex_t* mutexIsCreatedLetterChuncks;
+   int* isCreatedLetterChuncks;            // bool
+
 
    pthread_barrier_t* barrierComputeWordList;
 

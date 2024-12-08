@@ -58,12 +58,17 @@ void* ReducerThread::routine(void *arg)
 
         for (MapperResultEntry &elem : reducerThread->mapperResults->at(mapperResultIndex).mapperResultEntries) {
             int idxFirstWordLetter = elem.word[0] - 'a';
-            pthread_mutex_lock(reducerThread->mutexesWordListLetterChuncks[idxFirstWordLetter]);
+            pthread_mutex_lock(reducerThread->mutexesInsertInWordListConcatenation[idxFirstWordLetter]);
             reducerThread->wordList->insertInMapperResultConcatenation(elem);
-            pthread_mutex_unlock(reducerThread->mutexesWordListLetterChuncks[idxFirstWordLetter]);
+            pthread_mutex_unlock(reducerThread->mutexesInsertInWordListConcatenation[idxFirstWordLetter]);
         }
 
     }
+
+
+
+    pthread_barrier_wait(reducerThread->barrierComputeWordList);
+
 
 
 
@@ -77,6 +82,7 @@ void* ReducerThread::routine(void *arg)
         if (reducerThread->queueOutputFileIndices->size() > 0) {
             letterIndex = reducerThread->queueOutputFileIndices->front();
             reducerThread->queueOutputFileIndices->pop();
+
         } else {
             isEmptyOutputFileQueue = true;
         }
@@ -86,17 +92,13 @@ void* ReducerThread::routine(void *arg)
             break;
         }
 
-
-        // Da segmentation
-        // reducerThread->wordList->createLetterChunck(i);
-        // reducerThread->wordList->sortLetterChunck(i);
-        // // reducerThread->wordList->writeLetterChunck(i);
+        reducerThread->wordList->createLetterChunck(letterIndex);
+        reducerThread->wordList->sortLetterChunck(letterIndex);
+        reducerThread->wordList->writeLetterChunck(letterIndex);
     }
 
 
     pthread_exit(NULL);
 }
-
-
 
 

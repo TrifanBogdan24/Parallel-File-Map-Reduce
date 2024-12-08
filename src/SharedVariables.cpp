@@ -57,14 +57,17 @@ SharedVariables::SharedVariables(const int value_numMappers, const int value_num
 
     pthread_mutex_init(&mutexQueueOuputFileIndices, NULL);
 
-
     this->wordList.wordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
-    this->mutexesWordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
+    this->mutexesInsertInWordListConcatenation.resize(NUM_ALPHABET_LETTERS);
 
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
-        pthread_mutex_init(&mutexesWordListLetterChuncks[i], NULL);
         this->queueOutputFileIndices.push(i);
+        pthread_mutex_init(&mutexesInsertInWordListConcatenation[i], NULL);
     }
+
+
+    isCreatedLetterChuncks = TRUE;
+    pthread_mutex_init(&mutexIsCreatedLetterChuncks, NULL);
 
 
     pthread_mutex_init(&mutexNumCompletedMappers, NULL);
@@ -77,13 +80,15 @@ SharedVariables::~SharedVariables()
     pthread_cond_destroy(&condCompletedMappers);
     pthread_barrier_destroy(&barrierComputeWordList);    
 
-
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
-        pthread_mutex_destroy(&mutexesWordListLetterChuncks[i]);
+        pthread_mutex_destroy(&mutexesInsertInWordListConcatenation[i]);
     }
 
     pthread_mutex_destroy(&mutexQueueInputFileIndices);
     pthread_mutex_destroy(&mutexQueueOuputFileIndices);
+
+
+    pthread_mutex_destroy(&mutexIsCreatedLetterChuncks);
 
     pthread_mutex_destroy(&mutexQueueMapperResultIndices);
 
@@ -140,12 +145,13 @@ ReducerThread* SharedVariables::createReducerThread(int ID_reducerThread)
     reducerThread->queueOutputFileIndices = &this->queueOutputFileIndices;
     reducerThread->mutexQueueOutputFileIndices = &this->mutexQueueOuputFileIndices;
 
-
-    reducerThread->mutexesWordListLetterChuncks.resize(NUM_ALPHABET_LETTERS);
-
+    reducerThread->mutexesInsertInWordListConcatenation.resize(NUM_ALPHABET_LETTERS);
     for (int i = 0; i < NUM_ALPHABET_LETTERS; i++) {
-        reducerThread->mutexesWordListLetterChuncks[i] = &(this->mutexesWordListLetterChuncks[i]);
+        reducerThread->mutexesInsertInWordListConcatenation[i] = &this->mutexesInsertInWordListConcatenation[i];
     }
+
+    reducerThread->mutexIsCreatedLetterChuncks = &this->mutexIsCreatedLetterChuncks;
+    reducerThread->isCreatedLetterChuncks = &this->isCreatedLetterChuncks;
 
     return reducerThread;
 }

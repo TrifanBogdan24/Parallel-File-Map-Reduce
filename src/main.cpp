@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     // // for deubgging:  sharedVariables.writeWordListToFile();
 
     for (int i = 0; i < 26; i++) {
-        sharedVariables.wordList.createLetterChunck(i);
+      // sharedVariables.wordList.createLetterChunck(i);
         sharedVariables.wordList.sortLetterChunck(i);
         sharedVariables.wordList.writeLetterChunck(i);
     }

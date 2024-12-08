@@ -49,8 +49,12 @@ class SharedVariables {
 
    pthread_barrier_t barrierComputeWordList;
 
-   vector<pthread_mutex_t> mutexesWordListLetterChuncks;
+   vector<pthread_mutex_t> mutexesInsertInWordListConcatenation;
    WordList wordList;
+
+   pthread_mutex_t mutexIsCreatedLetterChuncks;
+   int isCreatedLetterChuncks;         // bool
+
 
    pthread_cond_t condCompletedMappers;
    pthread_mutex_t mutexNumCompletedMappers;
