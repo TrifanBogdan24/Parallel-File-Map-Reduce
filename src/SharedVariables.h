@@ -34,7 +34,7 @@ class SharedVariables {
  private:
    int numInputFiles;
 
- public:
+ private:
    queue<int> queueInputFileIndices;
    pthread_mutex_t mutexQueueInputFileIndices;
 
