@@ -1,20 +1,12 @@
 #pragma once
 
 // C++ libraries
-#include <iostream>
-#include <fstream>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
 
-// C libraries
-#include <pthread.h>
-#include <stdlib.h>
-#include <cstring>
-#include <cctype>
-#include <unistd.h>
+
 
 #include "MapperResult.h"
 
@@ -86,5 +78,4 @@ class WordList {
    void writeWordList(ostream& fout);
    void writeWordListToFile();  // to word-list.txt
    void printWordListToStdout();
-
 };

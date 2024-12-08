@@ -1,8 +1,5 @@
 #include <string>
 
-#include <stdlib.h>
-#include <cstring>
-#include <cctype>
 
 using namespace std;
 

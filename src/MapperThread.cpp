@@ -1,20 +1,11 @@
 // C++ libraries
-#include <iostream>
 #include <fstream>
-#include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <sstream>
 
 
-// C libraries
-#include <pthread.h>
-#include <stdlib.h>
-#include <cstring>
-#include <cctype>
-#include <unistd.h>
 
 #include "Boolean.h"
 #include "MapperThread.h"
@@ -50,8 +41,6 @@ void* MapperThread::routine(void *arg)
         if (isEmptyInputFileQueue == true) {
             break;
         }
-
-
 
         // Citeste continutul fisierului
         string inputFileName = mapperThread->inputFileNames->at(fileIndex);

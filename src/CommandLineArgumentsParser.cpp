@@ -1,11 +1,8 @@
-#include "CommandLineArgumentsParser.h"
-
-#include <string>
 #include <iostream>
+#include <string>
 
-#include <stdlib.h>
-#include <cstring>
-#include <cctype>
+
+#include "CommandLineArgumentsParser.h"
 
 using namespace std;
 

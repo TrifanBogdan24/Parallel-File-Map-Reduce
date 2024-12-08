@@ -1,18 +1,9 @@
 // C++ libraries
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 // C libraries
 #include <pthread.h>
-#include <stdlib.h>
-#include <cstring>
-#include <cctype>
-#include <unistd.h>
 
 
 #include "ReducerThread.h"

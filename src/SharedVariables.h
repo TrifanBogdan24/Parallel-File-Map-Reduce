@@ -1,21 +1,13 @@
 #pragma once
 
 // C++ libraries
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <set>
 #include <string>
 #include <vector>
 #include <queue>
-#include <algorithm>
 
 // C libraries
 #include <pthread.h>
-#include <stdlib.h>
-#include <cstring>
-#include <cctype>
-#include <unistd.h>
+
 
 #include "WordList.h"
 #include "MapperThread.h"

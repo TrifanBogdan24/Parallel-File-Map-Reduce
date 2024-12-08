@@ -1,21 +1,12 @@
 // C++ libraries
 #include <iostream>
 #include <fstream>
-#include <map>
-#include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 // C libraries
 #include <pthread.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <cstring>
-#include <cctype>
-#include <unistd.h>
+
 
 
 #include "CommandLineArgumentsParser.h"
@@ -24,12 +15,6 @@
 #include "ReducerThread.h"
 
 using namespace std;
-
-
-
-
-
-
 
 
 vector<string> readInptutFile(string &inputFileName)
