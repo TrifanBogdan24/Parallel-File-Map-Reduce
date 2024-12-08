@@ -163,7 +163,7 @@ do
             # se verifica daca rezultatele sunt corecte
             compare_outputs test_sec test_out
 
-            if [[ $? == 0 ]]
+            if [ $? == 0 ]
             then
                 correct=$((correct+1))
             else
@@ -191,7 +191,7 @@ do
 
             echo "Rularea a durat ${par_time} secunde"
 
-            if [[ $speedup_test == 1 ]]
+            if [ $speedup_test == 1 ]
             then
 
                 # se tine minte daca rezultatul e corect (pentru punctajul de scalabilitate)

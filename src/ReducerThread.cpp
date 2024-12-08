@@ -19,7 +19,7 @@ void* ReducerThread::routine(void *arg)
     ReducerThread* reducerThread = (ReducerThread*) arg;
 
     pthread_mutex_lock(reducerThread->mutexNumCompletedMappers);
-    while (*(reducerThread->numCompletedMappers) != reducerThread->numMappers) {
+    if (*(reducerThread->numCompletedMappers) != reducerThread->numMappers) {
         pthread_cond_wait(reducerThread->condCompletedMappers, reducerThread->mutexNumCompletedMappers);
     }
     pthread_mutex_unlock(reducerThread->mutexNumCompletedMappers);
@@ -73,7 +73,6 @@ void* ReducerThread::routine(void *arg)
         if (reducerThread->queueOutputFileIndices->size() > 0) {
             letterIndex = reducerThread->queueOutputFileIndices->front();
             reducerThread->queueOutputFileIndices->pop();
-
         } else {
             isEmptyOutputFileQueue = true;
         }
