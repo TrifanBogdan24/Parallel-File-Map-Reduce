@@ -1,8 +1,6 @@
 build:
-	g++ -o tema1 main.cpp -lpthread              \
-		CommandLineArgumentsParser.cpp SharedVariables.cpp   \
-		MapperThread.cpp ReducerThread.cpp                   \
-		MapperResult.cpp WordList.cpp
+	g++ -o tema1 main.cpp -lpthread       \
+		SharedVariables.cpp WordList.cpp
 clean:
 	rm -rf ./tema1 [a-z].txt word-list.txt
 

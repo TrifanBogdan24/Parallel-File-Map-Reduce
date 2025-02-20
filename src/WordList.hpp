@@ -8,7 +8,7 @@
 
 
 
-#include "MapperResult.h"
+#include "MapperResult.hpp"
 
 #define NUM_ALPHABET_LETTERS (int) 26
 

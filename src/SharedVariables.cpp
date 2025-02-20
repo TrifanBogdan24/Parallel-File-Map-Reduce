@@ -6,11 +6,10 @@
 // C libraries
 #include <pthread.h>
 
-#include "SharedVariables.h"
-#include "Boolean.h"
-#include "WordList.h"
-#include "MapperThread.h"
-#include "ReducerThread.h"
+#include "SharedVariables.hpp"
+#include "WordList.hpp"
+#include "MapperThread.hpp"
+#include "ReducerThread.hpp"
 
 
 using namespace std;
@@ -58,7 +57,7 @@ SharedVariables::SharedVariables(const int value_numMappers, const int value_num
     }
 
 
-    isCreatedLetterChuncks = TRUE;
+    isCreatedLetterChuncks = 1;
     pthread_mutex_init(&mutexIsCreatedLetterChuncks, NULL);
 
 

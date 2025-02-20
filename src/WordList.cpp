@@ -9,8 +9,8 @@
 // C libraries
 #include <pthread.h>
 
-#include "WordList.h"
-#include "MapperResult.h"
+#include "WordList.hpp"
+#include "MapperResult.hpp"
 
 
 using namespace std;

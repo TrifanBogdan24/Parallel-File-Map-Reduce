@@ -9,10 +9,10 @@
 
 
 
-#include "CommandLineArgumentsParser.h"
-#include "SharedVariables.h"
-#include "MapperThread.h"
-#include "ReducerThread.h"
+#include "CLI-ArgumentsParser.hpp"
+#include "SharedVariables.hpp"
+#include "MapperThread.hpp"
+#include "ReducerThread.hpp"
 
 using namespace std;
 
@@ -45,15 +45,18 @@ vector<string> readInptutFile(string &inputFileName)
 }
 
 
+
+
+
 int main(int argc, char* argv[])
 {
-    // TODO: make it run with no SEG FAULT
-
-    CommandLineArgumentsParser cliArgsParser = CommandLineArgumentsParser(argc, argv);
+    if (validateInput(argc, argv) == false) {
+        return EXIT_FAILURE;
+    }
     
-    int numMappers = cliArgsParser.getNumMappers();            // argv[1]
-    int numReducers = cliArgsParser.getNumReducers();          // argv[2]
-    string inputFileName = cliArgsParser.getInputFileName();   // argv[3]
+    int numMappers = charsToInt(argv[1]);
+    int numReducers = charsToInt(argv[2]);
+    string inputFileName = argv[3];
 
     vector<string> mapperInputFileNames = readInptutFile(inputFileName);
 

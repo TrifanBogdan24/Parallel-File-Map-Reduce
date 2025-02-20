@@ -13,8 +13,9 @@ class MapperResultEntry {
     int fileID;
 
  public:
-    MapperResultEntry(const string& word_value, const int fileID_value);
-    ~MapperResultEntry();
+    MapperResultEntry(const string& word_value, const int fileID_value)
+      : word(word_value), fileID(fileID_value) {};
+    ~MapperResultEntry() = default;
 };
 
 
@@ -23,7 +24,7 @@ class MapperResult {
     vector<MapperResultEntry> mapperResultEntries;
 
  public:
-    MapperResult();
-    ~MapperResult();
+    MapperResult() = default;
+    ~MapperResult() = default;
 
 };

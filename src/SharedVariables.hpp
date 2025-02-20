@@ -9,9 +9,9 @@
 #include <pthread.h>
 
 
-#include "WordList.h"
-#include "MapperThread.h"
-#include "ReducerThread.h"
+#include "WordList.hpp"
+#include "MapperThread.hpp"
+#include "ReducerThread.hpp"
 
 
 using namespace std;

@@ -1,42 +1,10 @@
-#include <iostream>
 #include <string>
-
-
-#include "CommandLineArgumentsParser.h"
+#include <iostream>
 
 using namespace std;
 
 
-CommandLineArgumentsParser::CommandLineArgumentsParser(int argcValue, char* argvValues[])
-{
-    this->argc = argcValue;
-    this->argv = argvValues;
-
-    validateInput();
-
-}
-
-CommandLineArgumentsParser::~CommandLineArgumentsParser() = default;
-
-
-int CommandLineArgumentsParser::getNumMappers()
-{
-    return this->numMappers;     // argv[1]
-}
-
-
-int CommandLineArgumentsParser::getNumReducers()
-{
-    return this->numReducers;    // argv[2]
-}
-
-string CommandLineArgumentsParser::getInputFileName()
-{
-    return this->inputFileName;  // argv[3]
-}
-
-
-int CommandLineArgumentsParser::charsToInt(char* str)
+int charsToInt(char* str)
 {
     if (str == NULL) {
         return -1;
@@ -46,7 +14,7 @@ int CommandLineArgumentsParser::charsToInt(char* str)
 
     for (char *ptr = str; *ptr != '\0'; ptr++) {
         if (*ptr < '0' || *ptr > '9') {
-            return 1;
+            return -1;
         }
         num = num * 10 + (*ptr - '0');
     }
@@ -55,7 +23,7 @@ int CommandLineArgumentsParser::charsToInt(char* str)
 }
 
 
-void CommandLineArgumentsParser::validateInput()
+bool validateInput(int argc, char* argv[])
 {
     if (argc != 4) {
         cerr << "Invalid number of arguments!\n";
@@ -67,26 +35,22 @@ void CommandLineArgumentsParser::validateInput()
 
     bool isValidInput = true;
 
-    this->numMappers = charsToInt(argv[1]);
-    this->numReducers = charsToInt(argv[2]);
-    this->inputFileName = argv[3];
+    int numMappers = charsToInt(argv[1]);
+    int numReducers = charsToInt(argv[2]);
+    string inputFileName = argv[3];
 
-    if (this->numMappers <= 0) {
+    if (numMappers <= 0) {
         cerr << "[ERROR] The frist argument in invalid!\n";
         cerr << "The first argument (number of mapperResults) is expected to be a positive non-zero number.\n";
         isValidInput = false;
     }
 
-    if (this->numReducers <= 0) {
+    if (numReducers <= 0) {
         cerr << "[ERROR] The frist argument in invalid!\n";
         cerr << "The first argument (number of mapperResults) is expected to be a positive non-zero number.\n";
         isValidInput = false;
     }
 
 
-    if (!isValidInput) {
-        exit(EXIT_FAILURE);
-    }
+    return isValidInput;
 }
-
-
